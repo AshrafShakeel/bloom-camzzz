@@ -7,6 +7,7 @@
 <link rel="icon" type="image/jpeg" href="images/logo.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Parisienne&family=Playfair+Display:ital,wght@0,500;0,600;1,500&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -211,20 +212,53 @@
 <!-- ===== BUY MODAL ===== -->
 <div class="buy-modal" id="buyModal" aria-hidden="true">
   <div class="buy-modal__backdrop" data-close></div>
+
   <div class="buy-modal__panel" role="dialog" aria-modal="true" aria-labelledby="buyModalCamera">
-    <button type="button" class="buy-modal__close" data-close aria-label="Close">×</button>
+
+    <button type="button" class="buy-modal__close" data-close aria-label="Close">
+      ×
+    </button>
+
     <img class="buy-modal__img" id="buyModalImg" src="" alt="">
-    <p class="buy-modal__eyebrow script">how would you like to order?</p>
-    <h3 class="buy-modal__title" id="buyModalCamera">Camera name</h3>
+
+    <p class="buy-modal__eyebrow script">
+      how would you like to order?
+    </p>
+
+    <h3 class="buy-modal__title" id="buyModalCamera">
+      Camera name
+    </h3>
+
     <div class="buy-modal__options">
-      <button type="button" class="buy-modal__option buy-modal__option--wa" id="buyWhatsapp">
-        <span class="buy-modal__icon">🟢</span> WhatsApp
+
+      <button
+        type="button"
+        class="buy-modal__option buy-modal__option--wa"
+        id="buyWhatsapp">
+
+        <i class="bi bi-whatsapp buy-modal__icon"></i>
+        WhatsApp
+
       </button>
-      <a class="buy-modal__option buy-modal__option--ig" id="buyInstagram" href="https://www.instagram.com/bloomcamzzz/" target="_blank" rel="noopener">
-        <span class="buy-modal__icon">📸</span> Instagram
+
+      <a
+        class="buy-modal__option buy-modal__option--ig"
+        id="buyInstagram"
+        href="https://www.instagram.com/bloomcamzzz/"
+        target="_blank"
+        rel="noopener">
+
+        <i class="bi bi-instagram buy-modal__icon"></i>
+        Instagram
+
       </a>
+
     </div>
-    <p class="buy-modal__note">WhatsApp will open with the camera name pre-filled — feel free to attach a screenshot of the photo too.</p>
+
+    <p class="buy-modal__note">
+      WhatsApp will open with the camera name pre-filled — feel free to attach a screenshot of the photo too.
+    </p>
+
   </div>
 </div>
 

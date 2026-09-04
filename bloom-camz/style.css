@@ -495,7 +495,18 @@ p{ margin: 0; }
   transition: transform .2s var(--ease), border-color .2s;
 }
 .buy-modal__option:hover{ transform: translateY(-2px); border-color: var(--plum); }
-.buy-modal__icon{ font-size: 1.1rem; }
+.buy-modal__icon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.buy-modal__option--wa .buy-modal__icon {
+  color: #25D366;
+}
+
+.buy-modal__option--ig .buy-modal__icon {
+  color: #E4405F;
+}
 .buy-modal__note{
   margin-top: 18px; font-size: .74rem; color: #8a8175; line-height: 1.5;
 }
