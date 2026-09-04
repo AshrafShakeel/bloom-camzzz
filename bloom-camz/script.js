@@ -137,6 +137,168 @@ if (wallScroll) {
   }, { passive: false });
 }
 
+/* ---- Camera details modal: gallery + description/specs ---- */
+const cameraDetails = {
+  'samsung-s860': {
+    name: 'Samsung S860',
+    meta: '8.1MP · Y2K silver body · charm included',
+    description: 'A classic compact digicam for that nostalgic Y2K look ✨ Perfect for everyday snapshots, flash photos & capturing memories with a vintage feel.',
+    images: [
+      'images/samsung-s860-crop.jpg',
+      'images/samsung-s860-crop2.jpg',
+      'images/samsung-s860-crop3.jpg',
+      'images/samsung-s860-crop4.jpg'
+    ],
+    specs: [
+      '8.1MP CCD Sensor',
+      '3× Optical Zoom',
+      '5× Digital Zoom',
+      '2.4” LCD Display',
+      'Digital Image Stabilization (DIS)',
+      'Face Detection',
+      'Macro / Close-up Mode',
+      'Built-in Flash',
+      'Self-Timer',
+      'ISO 80–1000',
+      'Multiple Scene Modes'
+    ]
+  },
+  'fujifilm-xp10': {
+    name: 'Fujifilm FinePix XP10',
+    meta: '12MP · rugged waterproof · champagne shell',
+    description: 'The tough little one — take it to the beach, the rain, wherever. Soft grain, dreamy flash shots.',
+    images: ['images/fujifilm-xp10-crop.jpg'],
+    specs: []
+  },
+  'benq-c1020': {
+    name: 'BenQ DC C1020',
+    meta: '10MP · brushed silver · charm included',
+    description: 'An underrated favourite — soft-focus edges and warm indoor flash that makes everyone look like a memory already.',
+    images: ['images/benq-c1020-crop.jpg'],
+    specs: []
+  }
+};
+
+const detailModal = document.getElementById('detailModal');
+const detailMainImg = document.getElementById('detailMainImg');
+const detailThumbs = document.getElementById('detailThumbs');
+const detailModalTitle = document.getElementById('detailModalTitle');
+const detailModalMeta = document.getElementById('detailModalMeta');
+const detailModalDescription = document.getElementById('detailModalDescription');
+const detailModalSpecs = document.getElementById('detailModalSpecs');
+const detailSpecWrap = document.getElementById('detailSpecWrap');
+const detailPrev = document.getElementById('detailPrev');
+const detailNext = document.getElementById('detailNext');
+const detailBuyBtn = document.getElementById('detailBuyBtn');
+
+let activeDetail = null;
+let activeDetailImageIndex = 0;
+
+function renderDetailImage() {
+  if (!activeDetail || !activeDetail.images.length) return;
+
+  const src = activeDetail.images[activeDetailImageIndex];
+  detailMainImg.src = src;
+  detailMainImg.alt = `${activeDetail.name} photo ${activeDetailImageIndex + 1}`;
+
+  detailThumbs.querySelectorAll('.detail-modal__thumb').forEach((thumb, index) => {
+    thumb.classList.toggle('is-active', index === activeDetailImageIndex);
+  });
+}
+
+function openDetailModal(detailKey) {
+  const detail = cameraDetails[detailKey];
+  if (!detail || !detailModal) return;
+
+  activeDetail = detail;
+  activeDetailImageIndex = 0;
+
+  detailModalTitle.textContent = detail.name;
+  detailModalMeta.textContent = detail.meta || '';
+  detailModalDescription.textContent = detail.description || '';
+
+  detailModalSpecs.innerHTML = '';
+  (detail.specs || []).forEach((spec) => {
+    const li = document.createElement('li');
+    li.textContent = spec;
+    detailModalSpecs.appendChild(li);
+  });
+  detailSpecWrap.hidden = !(detail.specs && detail.specs.length);
+
+  detailThumbs.innerHTML = '';
+  detail.images.forEach((src, index) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'detail-modal__thumb';
+    btn.setAttribute('aria-label', `View ${detail.name} photo ${index + 1}`);
+
+    const img = document.createElement('img');
+    img.src = src;
+    img.alt = '';
+    btn.appendChild(img);
+
+    btn.addEventListener('click', () => {
+      activeDetailImageIndex = index;
+      renderDetailImage();
+    });
+
+    detailThumbs.appendChild(btn);
+  });
+
+  const hasMultipleImages = detail.images.length > 1;
+  detailPrev.hidden = !hasMultipleImages;
+  detailNext.hidden = !hasMultipleImages;
+  detailThumbs.hidden = !hasMultipleImages;
+
+  renderDetailImage();
+  detailModal.classList.add('is-open');
+  detailModal.setAttribute('aria-hidden', 'false');
+}
+
+function closeDetailModal() {
+  if (!detailModal) return;
+  detailModal.classList.remove('is-open');
+  detailModal.setAttribute('aria-hidden', 'true');
+}
+
+if (detailModal) {
+  document.querySelectorAll('[data-details]').forEach((btn) => {
+    btn.addEventListener('click', () => openDetailModal(btn.dataset.details));
+  });
+
+  detailModal.querySelectorAll('[data-detail-close]').forEach((el) => {
+    el.addEventListener('click', closeDetailModal);
+  });
+
+  detailPrev.addEventListener('click', () => {
+    if (!activeDetail) return;
+    activeDetailImageIndex = (activeDetailImageIndex - 1 + activeDetail.images.length) % activeDetail.images.length;
+    renderDetailImage();
+  });
+
+  detailNext.addEventListener('click', () => {
+    if (!activeDetail) return;
+    activeDetailImageIndex = (activeDetailImageIndex + 1) % activeDetail.images.length;
+    renderDetailImage();
+  });
+
+  detailBuyBtn.addEventListener('click', () => {
+    if (!activeDetail) return;
+    const cameraName = activeDetail.name;
+    const imageSrc = activeDetail.images[activeDetailImageIndex] || activeDetail.images[0];
+    closeDetailModal();
+    openBuyModal(cameraName, imageSrc);
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (!detailModal.classList.contains('is-open')) return;
+
+    if (e.key === 'Escape') closeDetailModal();
+    if (e.key === 'ArrowLeft' && activeDetail?.images.length > 1) detailPrev.click();
+    if (e.key === 'ArrowRight' && activeDetail?.images.length > 1) detailNext.click();
+  });
+}
+
 /* ---- Buy modal: choose WhatsApp or Instagram ---- */
 const WHATSAPP_NUMBER = '923094440016'; // +92 309 4440016, no leading zero/plus
 const INSTAGRAM_URL = 'https://www.instagram.com/bloomcamzzz/';

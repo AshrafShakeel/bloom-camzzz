@@ -100,7 +100,8 @@
         <h3 class="card__name script">Samsung S860</h3>
         <p class="card__meta">8.1MP · Y2K silver body · charm included</p>
         <p class="card__desc">Compact and pocketable with that unmistakable early-2000s point-and-shoot glow. Comes with its own little beaded dangle.</p>
-        <div class="card__row card__row--buy">
+        <div class="card__row card__row--buy card__actions">
+          <button type="button" class="btn btn--details" data-details="samsung-s860">Details</button>
           <button type="button" class="btn btn--buy" data-buy data-camera="Samsung S860" data-image="images/samsung-s860-crop.jpg">Buy it</button>
         </div>
       </div>
@@ -114,7 +115,8 @@
         <h3 class="card__name script">Fujifilm FinePix XP10</h3>
         <p class="card__meta">12MP · rugged waterproof · champagne shell</p>
         <p class="card__desc">The tough little one — take it to the beach, the rain, wherever. Soft grain, dreamy flash shots.</p>
-        <div class="card__row card__row--buy">
+        <div class="card__row card__row--buy card__actions">
+          <button type="button" class="btn btn--details" data-details="fujifilm-xp10">Details</button>
           <button type="button" class="btn btn--buy" data-buy data-camera="Fujifilm FinePix XP10" data-image="images/fujifilm-xp10-crop.jpg">Buy it</button>
         </div>
       </div>
@@ -128,7 +130,8 @@
         <h3 class="card__name script">BenQ DC C1020</h3>
         <p class="card__meta">10MP · brushed silver · charm included</p>
         <p class="card__desc">An underrated favourite — soft-focus edges and warm indoor flash that makes everyone look like a memory already.</p>
-        <div class="card__row card__row--buy">
+        <div class="card__row card__row--buy card__actions">
+          <button type="button" class="btn btn--details" data-details="benq-c1020">Details</button>
           <button type="button" class="btn btn--buy" data-buy data-camera="BenQ DC C1020" data-image="images/benq-c1020-crop.jpg">Buy it</button>
         </div>
       </div>
@@ -142,7 +145,7 @@
   <div class="section__head reveal">
     <p class="section__eyebrow">the wall</p>
     <h2 class="section__title">Pinned up, just for looks</h2>
-    <p class="section__sub">A little rotating gallery of cameras we love. Swap the photos any time — see the <code>wallPhotos</code> list at the top of script.js.</p>
+    <p class="section__sub">A little rotating gallery of cameras we love. Swap the photos any time — see the</p>
   </div>
 
   <div class="wall__scroll" id="wallScroll">
@@ -208,6 +211,38 @@
     <p class="footer__copy">© 2026 Bloom Camz. Made with film-grain love.</p>
   </div>
 </footer>
+
+<!-- ===== CAMERA DETAILS MODAL ===== -->
+<div class="detail-modal" id="detailModal" aria-hidden="true">
+  <div class="detail-modal__backdrop" data-detail-close></div>
+
+  <div class="detail-modal__panel" role="dialog" aria-modal="true" aria-labelledby="detailModalTitle">
+    <button type="button" class="detail-modal__close" data-detail-close aria-label="Close">×</button>
+
+    <div class="detail-modal__gallery">
+      <div class="detail-modal__main-wrap">
+        <button type="button" class="detail-modal__arrow detail-modal__arrow--prev" id="detailPrev" aria-label="Previous image">‹</button>
+        <img class="detail-modal__main-img" id="detailMainImg" src="" alt="">
+        <button type="button" class="detail-modal__arrow detail-modal__arrow--next" id="detailNext" aria-label="Next image">›</button>
+      </div>
+      <div class="detail-modal__thumbs" id="detailThumbs"></div>
+    </div>
+
+    <div class="detail-modal__content">
+      <p class="detail-modal__eyebrow script">camera details</p>
+      <h3 class="detail-modal__title" id="detailModalTitle">Camera name</h3>
+      <p class="detail-modal__meta" id="detailModalMeta"></p>
+      <p class="detail-modal__description" id="detailModalDescription"></p>
+
+      <div class="detail-modal__spec-wrap" id="detailSpecWrap">
+        <h4 class="detail-modal__spec-title">Camera Details</h4>
+        <ul class="detail-modal__specs" id="detailModalSpecs"></ul>
+      </div>
+
+      <button type="button" class="btn btn--buy detail-modal__buy" id="detailBuyBtn">Buy it</button>
+    </div>
+  </div>
+</div>
 
 <!-- ===== BUY MODAL ===== -->
 <div class="buy-modal" id="buyModal" aria-hidden="true">
