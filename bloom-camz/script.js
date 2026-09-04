@@ -460,10 +460,16 @@ if (buyModal) {
   buyInstagramLink.href = INSTAGRAM_URL;
 }
 
-/* ---- Request-a-camera modal: free-text wish -> pre-filled WhatsApp message ---- */
+/* ---- Request-a-camera modal: structured fields -> pre-filled WhatsApp message ---- */
 const requestModal = document.getElementById('requestModal');
 const openRequestBtn = document.getElementById('openRequestModal');
-const requestInput = document.getElementById('requestInput');
+const reqModelInput = document.getElementById('reqModel');
+const reqBudgetFrom = document.getElementById('reqBudgetFrom');
+const reqBudgetTo = document.getElementById('reqBudgetTo');
+const reqNoBudget = document.getElementById('reqNoBudget');
+const requestBudgetRow = document.getElementById('requestBudgetRow');
+const reqSeenPrice = document.getElementById('reqSeenPrice');
+const reqCustom = document.getElementById('reqCustom');
 const requestCount = document.getElementById('requestCount');
 const requestSendBtn = document.getElementById('requestSendBtn');
 
@@ -471,13 +477,20 @@ function openRequestModal() {
   if (!requestModal) return;
   requestModal.classList.add('is-open');
   requestModal.setAttribute('aria-hidden', 'false');
-  setTimeout(() => requestInput && requestInput.focus(), 250);
+  setTimeout(() => reqModelInput && reqModelInput.focus(), 250);
 }
 
 function closeRequestModal() {
   if (!requestModal) return;
   requestModal.classList.remove('is-open');
   requestModal.setAttribute('aria-hidden', 'true');
+}
+
+function shakeField(el) {
+  if (!el) return;
+  el.classList.add('is-shaking');
+  el.focus();
+  setTimeout(() => el.classList.remove('is-shaking'), 400);
 }
 
 if (requestModal) {
@@ -491,28 +504,73 @@ if (requestModal) {
     if (e.key === 'Escape' && requestModal.classList.contains('is-open')) closeRequestModal();
   });
 
-  requestInput?.addEventListener('input', () => {
-    requestCount.textContent = requestInput.value.length;
+  reqCustom?.addEventListener('input', () => {
+    requestCount.textContent = reqCustom.value.length;
+  });
+
+  // "No budget" checkbox disables + clears the from/to range fields
+  reqNoBudget?.addEventListener('change', () => {
+    const disabled = reqNoBudget.checked;
+    requestBudgetRow.classList.toggle('is-disabled', disabled);
+    reqBudgetFrom.disabled = disabled;
+    reqBudgetTo.disabled = disabled;
+    if (disabled) {
+      reqBudgetFrom.value = '';
+      reqBudgetTo.value = '';
+    }
   });
 
   requestSendBtn?.addEventListener('click', () => {
-    const wish = requestInput.value.trim();
+    const model = reqModelInput.value.trim();
+    const from = reqBudgetFrom.value.trim();
+    const to = reqBudgetTo.value.trim();
+    const noBudget = reqNoBudget.checked;
+    const seenPrice = reqSeenPrice.value.trim();
+    const custom = reqCustom.value.trim();
 
-    if (!wish) {
-      requestInput.classList.add('is-shaking');
-      requestInput.focus();
-      setTimeout(() => requestInput.classList.remove('is-shaking'), 400);
+    // Require at least a model name or a custom note — something to go on
+    if (!model && !custom) {
+      shakeField(reqModelInput);
       return;
     }
 
-    const message = `Hi Bloom Camz! ✨ I'm looking for a camera:\n\n${wish}`;
+    const lines = ["Hi Bloom Camz! ✨ I'm looking for a camera:", ''];
+    lines.push(`Model: ${model || 'Not sure yet — open to suggestions'}`);
+
+    if (noBudget) {
+      lines.push('Budget: No budget in mind, any range works');
+    } else if (from || to) {
+      const fromText = from ? `Rs. ${from}` : 'Rs. 0';
+      const toText = to ? `Rs. ${to}` : 'open';
+      lines.push(`Budget: ${fromText} to ${toText}`);
+    }
+
+    if (seenPrice) {
+      lines.push(`Seen it elsewhere for: ${seenPrice}`);
+    }
+
+    if (custom) {
+      lines.push(`Notes: ${custom}`);
+    }
+
+    const message = lines.join('\n');
     const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
 
     triggerFlash();
     window.open(url, '_blank', 'noopener');
 
-    requestInput.value = '';
+    // Reset the form
+    reqModelInput.value = '';
+    reqBudgetFrom.value = '';
+    reqBudgetTo.value = '';
+    reqNoBudget.checked = false;
+    requestBudgetRow.classList.remove('is-disabled');
+    reqBudgetFrom.disabled = false;
+    reqBudgetTo.disabled = false;
+    reqSeenPrice.value = '';
+    reqCustom.value = '';
     requestCount.textContent = '0';
+
     closeRequestModal();
   });
 }
