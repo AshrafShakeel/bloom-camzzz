@@ -13,7 +13,6 @@ const wallPhotos = [
   { src: 'https://picsum.photos/seed/bloomcamz4/300/380', caption: 'Test shot' },
   { src: 'https://picsum.photos/seed/bloomcamz5/300/380', caption: 'Packed up' },
   { src: 'https://picsum.photos/seed/bloomcamz6/300/380', caption: 'On the shelf' },
-
   { src: 'https://picsum.photos/seed/bloomcamz7/300/380', caption: 'New arrival' },
   { src: 'https://picsum.photos/seed/bloomcamz8/300/380', caption: 'Daily pick' },
   { src: 'https://picsum.photos/seed/bloomcamz9/300/380', caption: 'Little detail' },
@@ -166,16 +165,55 @@ const cameraDetails = {
   'fujifilm-xp10': {
     name: 'Fujifilm FinePix XP10',
     meta: '12MP · rugged waterproof · champagne shell',
-    description: 'The tough little one — take it to the beach, the rain, wherever. Soft grain, dreamy flash shots.',
-    images: ['images/fujifilm-xp10-crop.jpg'],
-    specs: []
+    description: 'A perfect little digicam for capturing that dreamy vintage & Y2K aesthetic ✨ Fully checked and ready to capture your memories. Perfect for everyday snaps, travel, outings, parties & that nostalgic digicam look.',
+    images: [
+      'images/fujifilm-xp10-crop.jpg',
+      'images/fujifilm-xp10-crop2.jpg',
+      'images/fujifilm-xp10-crop3.jpg',
+      'images/fujifilm-xp10-crop4.jpg'
+    ],
+    specs: [
+      '12MP CCD Sensor',
+      '5× Optical Zoom',
+      '36–180mm Equivalent Lens',
+      '2.7” LCD Display',
+      'Digital Image Stabilization',
+      'Face Detection + Macro Mode',
+      'ISO 100–1600',
+      'Built-in Flash',
+      'Self-Timer',
+      'Video: HD 720p @ 30fps',
+      'Storage: SD / SDHC',
+      'Battery: Rechargeable Li-ion',
+      'Condition: 8/10 — Pre-loved with normal signs of use'
+    ]
   },
   'benq-c1020': {
     name: 'BenQ DC C1020',
-    meta: '10MP · brushed silver · charm included',
-    description: 'An underrated favourite — soft-focus edges and warm indoor flash that makes everyone look like a memory already.',
-    images: ['images/benq-c1020-crop.jpg'],
-    specs: []
+    meta: '10.1MP · classic Y2K compact · charm included',
+    description: 'A fun little compact digicam with a classic Y2K/vintage digital-camera feel ✨ Perfect for everyday snaps, flash photography, parties, outings and capturing nostalgic memories.',
+    images: [
+      'images/benq-c1020-crop.jpg',
+      'images/benq-c1020-crop2.jpg',
+      'images/benq-c1020-crop3.jpg',
+      'images/benq-c1020-crop4.jpg'
+    ],
+    specs: [
+      '10.1MP CCD Sensor',
+      '3× Optical Zoom',
+      '2.5” LCD Display',
+      'Digital Image Stabilization',
+      'Face Detection',
+      'Smile Detection',
+      'Blink Detection',
+      'Built-in Flash',
+      'Self-Timer',
+      'Macro Mode',
+      'Video: Recording with sound',
+      'Storage: SD / SDHC',
+      'Battery: 2× AA batteries',
+      'Condition: 9/10 — Pre-loved with normal signs of use'
+    ]
   }
 };
 
