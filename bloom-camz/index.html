@@ -12,6 +12,16 @@
 </head>
 <body>
 
+<!-- ===== LOADER (camera shutter reveal) ===== -->
+<div class="loader" id="loader" aria-hidden="true">
+  <div class="loader__ring"></div>
+  <p class="loader__word script">Bloom Camz</p>
+  <p class="loader__hint">developing your memories<span class="loader__dots"><span>.</span><span>.</span><span>.</span></span></p>
+</div>
+
+<!-- ===== SCROLL PROGRESS ===== -->
+<div class="progress-bar" id="progressBar"></div>
+
 <div class="grain"></div>
 
 <!-- ===== NAV ===== -->
@@ -24,6 +34,7 @@
     <nav class="nav__links">
       <a href="#collection">Collection</a>
       <a href="#story">Story</a>
+      <a href="#request">Request</a>
       <a href="#order">How to Order</a>
     </nav>
     <span class="nav__flag">Karachi&nbsp;🇵🇰</span>
@@ -52,6 +63,10 @@
   </div>
 
   <div class="hero__stage" id="heroStage">
+    <span class="hero__sparkle hero__sparkle--1" aria-hidden="true">✨</span>
+    <span class="hero__sparkle hero__sparkle--2" aria-hidden="true">✦</span>
+    <span class="hero__sparkle hero__sparkle--3" aria-hidden="true">✧</span>
+    <span class="hero__sparkle hero__sparkle--4" aria-hidden="true">✿</span>
     <div class="hero__charm" id="heroCharm">
       <img src="images/samsung-s860-crop.jpg" alt="Samsung S860 vintage digicam" id="heroImg">
     </div>
@@ -168,6 +183,25 @@
     <h2 class="section__title">Digital, but make it nostalgic</h2>
     <p class="story__p">Bloom Camz started as a small closet of childhood point-and-shoots — the kind with a wrist strap, a pop-up flash, and photos that come out just a little bit soft. We clean each one up, test the battery and card slot, and thread on a tiny charm before it finds a new home.</p>
     <p class="story__p">No two cameras are quite the same, so the collection changes often. Once it's gone, it's gone — until the next little bloom of stock arrives.</p>
+  </div>
+</section>
+
+<!-- ===== REQUEST ===== -->
+<section class="request" id="request">
+  <div class="request__art reveal" aria-hidden="true">
+    <span class="request__blob"></span>
+    <span class="request__cam">📷</span>
+    <span class="request__sparkle request__sparkle--1">✨</span>
+    <span class="request__sparkle request__sparkle--2">💫</span>
+    <span class="request__sparkle request__sparkle--3">✿</span>
+  </div>
+  <div class="request__text reveal">
+    <p class="section__eyebrow">looking for something specific?</p>
+    <h2 class="section__title">Tell us the camera of your dreams</h2>
+    <p class="section__sub" style="margin-top:14px;">Can't find it in the collection? Describe the brand, colour, budget, or vibe you're after — we'll hunt it down for you.</p>
+    <button type="button" class="btn btn--primary request__open" id="openRequestModal">
+      <i class="bi bi-camera"></i>&nbsp; Request a Camera
+    </button>
   </div>
 </section>
 
@@ -294,6 +328,33 @@
       WhatsApp will open with the camera name pre-filled — feel free to attach a screenshot of the photo too.
     </p>
 
+  </div>
+</div>
+
+<!-- ===== REQUEST-A-CAMERA MODAL ===== -->
+<div class="request-modal" id="requestModal" aria-hidden="true">
+  <div class="request-modal__backdrop" data-request-close></div>
+
+  <div class="request-modal__panel" role="dialog" aria-modal="true" aria-labelledby="requestModalTitle">
+    <button type="button" class="request-modal__close" data-request-close aria-label="Close">×</button>
+
+    <p class="request-modal__eyebrow script">what are you hunting for?</p>
+    <h3 class="request-modal__title" id="requestModalTitle">Request a Camera</h3>
+    <p class="request-modal__hint">Brand, colour, features, budget — anything that helps us track down your dream digicam.</p>
+
+    <textarea
+      id="requestInput"
+      class="request-modal__textarea"
+      rows="4"
+      maxlength="300"
+      placeholder="e.g. Looking for a pink Sony Cybershot under Rs. 5000, with a charm if possible!"></textarea>
+    <div class="request-modal__count"><span id="requestCount">0</span>/300</div>
+
+    <button type="button" class="btn btn--primary request-modal__send" id="requestSendBtn">
+      <i class="bi bi-whatsapp"></i>&nbsp; Send on WhatsApp
+    </button>
+
+    <p class="request-modal__note">This opens WhatsApp with your message ready to go — just hit send there too.</p>
   </div>
 </div>
 

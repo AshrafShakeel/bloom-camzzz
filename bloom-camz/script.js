@@ -2,6 +2,74 @@
 // Bloom Camz — interactions
 // ============================================
 
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---- Loader: camera-shutter reveal on first paint ---- */
+const loader = document.getElementById('loader');
+
+if (loader) {
+  if (prefersReducedMotion) {
+    loader.classList.add('is-done');
+  } else {
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        loader.classList.add('is-closing');
+        loader.addEventListener('transitionend', () => loader.classList.add('is-done'), { once: true });
+      }, 500);
+    });
+    // Safety net in case 'load' fires very late or transitionend never fires
+    setTimeout(() => loader.classList.add('is-closing'), 3000);
+    setTimeout(() => loader.classList.add('is-done'), 4000);
+  }
+}
+
+/* ---- Scroll progress bar ---- */
+const progressBar = document.getElementById('progressBar');
+if (progressBar) {
+  const updateProgress = () => {
+    const scrollTop = window.scrollY;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const pct = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+    progressBar.style.width = `${pct}%`;
+  };
+  updateProgress();
+  window.addEventListener('scroll', updateProgress, { passive: true });
+  window.addEventListener('resize', updateProgress);
+}
+
+/* ---- Cursor sparkle trail (desktop/hover-capable devices only) ---- */
+if (!prefersReducedMotion && window.matchMedia('(hover: hover)').matches) {
+  const sparkleChars = ['✨', '·', '✦', '✧'];
+  let lastSparkle = 0;
+
+  document.addEventListener('mousemove', (e) => {
+    const now = Date.now();
+    if (now - lastSparkle < 80) return;
+    lastSparkle = now;
+
+    const sparkle = document.createElement('span');
+    sparkle.className = 'cursor-sparkle';
+    sparkle.textContent = sparkleChars[Math.floor(Math.random() * sparkleChars.length)];
+    sparkle.style.left = `${e.clientX}px`;
+    sparkle.style.top = `${e.clientY}px`;
+    sparkle.style.setProperty('--dx', `${(Math.random() - 0.5) * 30}px`);
+    document.body.appendChild(sparkle);
+
+    sparkle.addEventListener('animationend', () => sparkle.remove());
+    setTimeout(() => sparkle.remove(), 1000); // safety net
+  });
+}
+
+/* ---- Reusable camera-flash click effect ---- */
+function triggerFlash() {
+  if (prefersReducedMotion) return;
+  const flash = document.createElement('div');
+  flash.className = 'flash-overlay';
+  document.body.appendChild(flash);
+  flash.addEventListener('animationend', () => flash.remove());
+  setTimeout(() => flash.remove(), 700); // safety net
+}
+
 /* ---- The Wall: dynamic hanging gallery ----
    EDIT THIS ARRAY to change what's on the wall — add, remove, or
    swap any entry. Each item just needs a src (image path or URL)
@@ -325,6 +393,7 @@ if (detailModal) {
     const cameraName = activeDetail.name;
     const imageSrc = activeDetail.images[activeDetailImageIndex] || activeDetail.images[0];
     closeDetailModal();
+    triggerFlash();
     openBuyModal(cameraName, imageSrc);
   });
 
@@ -366,6 +435,7 @@ function closeBuyModal() {
 if (buyModal) {
   document.querySelectorAll('[data-buy]').forEach((btn) => {
     btn.addEventListener('click', () => {
+      triggerFlash();
       openBuyModal(btn.dataset.camera, btn.dataset.image);
     });
   });
@@ -381,12 +451,70 @@ if (buyModal) {
   buyWhatsappBtn.addEventListener('click', () => {
     const message = `Hi Bloom Camz! I'd like to buy the ${currentCameraName} 📷`;
     const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+    triggerFlash();
     window.open(url, '_blank', 'noopener');
   });
 
   // Instagram just opens the profile — no per-message prefill is possible
   // through a plain link, so the person DMs however they like.
   buyInstagramLink.href = INSTAGRAM_URL;
+}
+
+/* ---- Request-a-camera modal: free-text wish -> pre-filled WhatsApp message ---- */
+const requestModal = document.getElementById('requestModal');
+const openRequestBtn = document.getElementById('openRequestModal');
+const requestInput = document.getElementById('requestInput');
+const requestCount = document.getElementById('requestCount');
+const requestSendBtn = document.getElementById('requestSendBtn');
+
+function openRequestModal() {
+  if (!requestModal) return;
+  requestModal.classList.add('is-open');
+  requestModal.setAttribute('aria-hidden', 'false');
+  setTimeout(() => requestInput && requestInput.focus(), 250);
+}
+
+function closeRequestModal() {
+  if (!requestModal) return;
+  requestModal.classList.remove('is-open');
+  requestModal.setAttribute('aria-hidden', 'true');
+}
+
+if (requestModal) {
+  openRequestBtn?.addEventListener('click', openRequestModal);
+
+  requestModal.querySelectorAll('[data-request-close]').forEach((el) => {
+    el.addEventListener('click', closeRequestModal);
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && requestModal.classList.contains('is-open')) closeRequestModal();
+  });
+
+  requestInput?.addEventListener('input', () => {
+    requestCount.textContent = requestInput.value.length;
+  });
+
+  requestSendBtn?.addEventListener('click', () => {
+    const wish = requestInput.value.trim();
+
+    if (!wish) {
+      requestInput.classList.add('is-shaking');
+      requestInput.focus();
+      setTimeout(() => requestInput.classList.remove('is-shaking'), 400);
+      return;
+    }
+
+    const message = `Hi Bloom Camz! ✨ I'm looking for a camera:\n\n${wish}`;
+    const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+
+    triggerFlash();
+    window.open(url, '_blank', 'noopener');
+
+    requestInput.value = '';
+    requestCount.textContent = '0';
+    closeRequestModal();
+  });
 }
 
 /* ---- Hero: mouse-driven 3D tilt on the floating camera ---- */
