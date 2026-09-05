@@ -204,6 +204,103 @@ if (wallScroll) {
   }, { passive: false });
 }
 
+/* ---- Customer feedback wall (masonry) ----
+   EDIT THIS ARRAY to add more feedback screenshots. Drop the image into
+   images/feedback/ (e.g. Feedback_2.jpeg, Feedback_3.jpeg...) and add a
+   matching line here — nothing else in the code needs to change. */
+const feedbackPhotos = [
+  { src: 'images/feedback/Feedback_1.jpeg', alt: 'Customer feedback screenshot' }
+];
+
+const feedbackTilts = [-3, 2, -2, 4, -4, 3, -1, 2];
+const feedbackGridEl = document.getElementById('feedbackGrid');
+
+if (feedbackGridEl) {
+  feedbackPhotos.forEach((photo, i) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'feedback__wrap reveal';
+
+    const card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'feedback__card';
+    card.style.setProperty('--tilt', `${feedbackTilts[i % feedbackTilts.length]}deg`);
+    card.setAttribute('aria-label', `View feedback screenshot ${i + 1} full size`);
+
+    const img = document.createElement('img');
+    img.src = photo.src;
+    img.alt = photo.alt || 'Customer feedback screenshot';
+    img.loading = 'lazy';
+
+    const heart = document.createElement('span');
+    heart.className = 'feedback__heart';
+    heart.innerHTML = '<i class="bi bi-heart-fill"></i>';
+
+    card.appendChild(img);
+    card.appendChild(heart);
+    card.addEventListener('click', () => openFeedbackLightbox(i));
+
+    wrap.appendChild(card);
+    feedbackGridEl.appendChild(wrap);
+  });
+}
+
+/* ---- Feedback lightbox: tap a screenshot to see it full size ---- */
+const feedbackLightbox = document.getElementById('feedbackLightbox');
+const feedbackLightboxImg = document.getElementById('feedbackLightboxImg');
+const feedbackPrev = document.getElementById('feedbackPrev');
+const feedbackNext = document.getElementById('feedbackNext');
+
+let activeFeedbackIndex = 0;
+
+function renderFeedbackLightbox() {
+  const photo = feedbackPhotos[activeFeedbackIndex];
+  if (!photo || !feedbackLightboxImg) return;
+  feedbackLightboxImg.src = photo.src;
+  feedbackLightboxImg.alt = photo.alt || 'Customer feedback screenshot';
+}
+
+function openFeedbackLightbox(index) {
+  if (!feedbackLightbox) return;
+  activeFeedbackIndex = index;
+  renderFeedbackLightbox();
+
+  const hasMultiple = feedbackPhotos.length > 1;
+  feedbackPrev.hidden = !hasMultiple;
+  feedbackNext.hidden = !hasMultiple;
+
+  feedbackLightbox.classList.add('is-open');
+  feedbackLightbox.setAttribute('aria-hidden', 'false');
+}
+
+function closeFeedbackLightbox() {
+  if (!feedbackLightbox) return;
+  feedbackLightbox.classList.remove('is-open');
+  feedbackLightbox.setAttribute('aria-hidden', 'true');
+}
+
+if (feedbackLightbox) {
+  feedbackLightbox.querySelectorAll('[data-feedback-close]').forEach((el) => {
+    el.addEventListener('click', closeFeedbackLightbox);
+  });
+
+  feedbackPrev?.addEventListener('click', () => {
+    activeFeedbackIndex = (activeFeedbackIndex - 1 + feedbackPhotos.length) % feedbackPhotos.length;
+    renderFeedbackLightbox();
+  });
+
+  feedbackNext?.addEventListener('click', () => {
+    activeFeedbackIndex = (activeFeedbackIndex + 1) % feedbackPhotos.length;
+    renderFeedbackLightbox();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (!feedbackLightbox.classList.contains('is-open')) return;
+    if (e.key === 'Escape') closeFeedbackLightbox();
+    if (e.key === 'ArrowLeft' && feedbackPhotos.length > 1) feedbackPrev.click();
+    if (e.key === 'ArrowRight' && feedbackPhotos.length > 1) feedbackNext.click();
+  });
+}
+
 /* ---- Camera details modal: gallery + description/specs ---- */
 const cameraDetails = {
   'samsung-s860': {
@@ -211,10 +308,10 @@ const cameraDetails = {
     meta: '8.1MP · Y2K silver body · charm included',
     description: 'A classic compact digicam for that nostalgic Y2K look ✨ Perfect for everyday snapshots, flash photos & capturing memories with a vintage feel.',
     images: [
-      'images/samsung-s860-crop.jpg',
-      'images/samsung-s860-crop2.jpg',
-      'images/samsung-s860-crop3.jpg',
-      'images/samsung-s860-crop4.jpg'
+      'images/products/samsung-s860-crop.jpg',
+      'images/products/samsung-s860-crop2.jpg',
+      'images/products/samsung-s860-crop3.jpg',
+      'images/products/samsung-s860-crop4.jpg'
     ],
     specs: [
       '8.1MP CCD Sensor',
@@ -235,10 +332,10 @@ const cameraDetails = {
     meta: '12MP · rugged waterproof · champagne shell',
     description: 'A perfect little digicam for capturing that dreamy vintage & Y2K aesthetic ✨ Fully checked and ready to capture your memories. Perfect for everyday snaps, travel, outings, parties & that nostalgic digicam look.',
     images: [
-      'images/fujifilm-xp10-crop.jpg',
-      'images/fujifilm-xp10-crop2.jpg',
-      'images/fujifilm-xp10-crop3.jpg',
-      'images/fujifilm-xp10-crop4.jpg'
+      'images/products/fujifilm-xp10-crop.jpg',
+      'images/products/fujifilm-xp10-crop2.jpg',
+      'images/products/fujifilm-xp10-crop3.jpg',
+      'images/products/fujifilm-xp10-crop4.jpg'
     ],
     specs: [
       '12MP CCD Sensor',
@@ -261,10 +358,10 @@ const cameraDetails = {
     meta: '10.1MP · classic Y2K compact · charm included',
     description: 'A fun little compact digicam with a classic Y2K/vintage digital-camera feel ✨ Perfect for everyday snaps, flash photography, parties, outings and capturing nostalgic memories.',
     images: [
-      'images/benq-c1020-crop.jpg',
-      'images/benq-c1020-crop2.jpg',
-      'images/benq-c1020-crop3.jpg',
-      'images/benq-c1020-crop4.jpg'
+      'images/products/benq-c1020-crop.jpg',
+      'images/products/benq-c1020-crop2.jpg',
+      'images/products/benq-c1020-crop3.jpg',
+      'images/products/benq-c1020-crop4.jpg'
     ],
     specs: [
       '10.1MP CCD Sensor',
