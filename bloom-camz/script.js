@@ -70,6 +70,66 @@ function triggerFlash() {
   setTimeout(() => flash.remove(), 700); // safety net
 }
 
+/* ---- Coming Soon countdown ----
+   EDIT THIS DATE whenever the drop date/time changes. Format:
+   'YYYY-MM-DDTHH:MM:SS+05:00' (+05:00 = Pakistan time, keep it unless hosting elsewhere). */
+const COMING_SOON_TARGET = new Date('2026-09-07T21:00:00+05:00');
+
+const cdDays = document.getElementById('cdDays');
+const cdHours = document.getElementById('cdHours');
+const cdMins = document.getElementById('cdMins');
+const cdSecs = document.getElementById('cdSecs');
+const comingSoonHeading = document.getElementById('comingSoonHeading');
+const comingSoonSub = document.getElementById('comingSoonSub');
+const countdownEl = document.getElementById('countdown');
+
+if (cdDays && cdHours && cdMins && cdSecs) {
+  let countdownDone = false;
+
+  function updateCountdown() {
+    const diff = COMING_SOON_TARGET - new Date();
+
+    if (diff <= 0) {
+      cdDays.textContent = '00';
+      cdHours.textContent = '00';
+      cdMins.textContent = '00';
+      cdSecs.textContent = '00';
+
+      if (!countdownDone) {
+        countdownDone = true;
+        if (comingSoonHeading) comingSoonHeading.textContent = "They're almost here 👀";
+        if (comingSoonSub) comingSoonSub.textContent = "Final touches are underway — keep an eye on the collection above, they'll be live any moment.";
+        if (countdownEl) countdownEl.classList.add('is-done');
+      }
+      return;
+    }
+
+    const days = Math.floor(diff / 86400000);
+    const hours = Math.floor((diff % 86400000) / 3600000);
+    const mins = Math.floor((diff % 3600000) / 60000);
+    const secs = Math.floor((diff % 60000) / 1000);
+
+    cdDays.textContent = String(days).padStart(2, '0');
+    cdHours.textContent = String(hours).padStart(2, '0');
+    cdMins.textContent = String(mins).padStart(2, '0');
+    cdSecs.textContent = String(secs).padStart(2, '0');
+  }
+
+  updateCountdown();
+  setInterval(updateCountdown, 1000);
+}
+
+/* ---- "Notify Me" button -> pings WhatsApp so we can message them when live ---- */
+const notifyBtn = document.getElementById('notifyBtn');
+if (notifyBtn) {
+  notifyBtn.addEventListener('click', () => {
+    const message = "Hi Bloom Camz! 🔔 Please notify me the moment the 3 new cameras drop!";
+    const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+    triggerFlash();
+    window.open(url, '_blank', 'noopener');
+  });
+}
+
 /* ---- The Wall: dynamic hanging gallery ----
    EDIT THIS ARRAY to change what's on the wall — add, remove, or
    swap any entry. Each item just needs a src (image path or URL)
