@@ -909,6 +909,59 @@ p{ margin: 0; }
 }
 .detail-modal__buy{ margin-top: 24px; }
 
+.detail-modal__promise {
+    grid-column: 1 / -1;   /* FULL WIDTH */
+    width: 100%;
+
+    margin-top: 4px;
+    padding: 20px 22px;
+
+    background: #fff8f3;
+    border: 1px solid rgba(110, 42, 58, .22);
+    border-radius: 16px;
+}
+
+.detail-modal__promise h4 {
+    margin: 0 0 10px;
+    color: var(--plum);
+    font-family: var(--serif);
+    font-size: 1.05rem;
+}
+
+.detail-modal__promise p {
+    margin-top: 8px;
+    font-size: .82rem;
+    line-height: 1.65;
+    color: #5a5248;
+}
+.detail-promise__whatsapp{
+  margin-top: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 999px;
+
+  background: #25D366;
+  color: #fff;
+
+  font-family: var(--sans);
+  font-size: .82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.detail-promise__whatsapp:hover{
+  transform: translateY(-2px);
+}
+
+.detail-promise__whatsapp i{
+  font-size: 1.1rem;
+}
+
+
 @media (max-width: 760px){
   .detail-modal{ padding: 12px; align-items: flex-end; }
   .detail-modal__panel{

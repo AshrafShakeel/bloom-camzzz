@@ -130,90 +130,79 @@ if (notifyBtn) {
   });
 }
 
-/* ---- The Wall: dynamic hanging gallery ----
-   EDIT THIS ARRAY to change what's on the wall — add, remove, or
-   swap any entry. Each item just needs a src (image path or URL)
-   and an alt/caption. Nothing else in the code needs to change. */
-const wallPhotos = [
-  { src: 'https://picsum.photos/seed/bloomcamz1/300/380', caption: 'Sunday find' },
-  { src: 'https://picsum.photos/seed/bloomcamz2/300/380', caption: 'Charm detail' },
-  { src: 'https://picsum.photos/seed/bloomcamz3/300/380', caption: 'Fresh in' },
-  { src: 'https://picsum.photos/seed/bloomcamz4/300/380', caption: 'Test shot' },
-  { src: 'https://picsum.photos/seed/bloomcamz5/300/380', caption: 'Packed up' },
-  { src: 'https://picsum.photos/seed/bloomcamz6/300/380', caption: 'On the shelf' },
-  { src: 'https://picsum.photos/seed/bloomcamz7/300/380', caption: 'New arrival' },
-  { src: 'https://picsum.photos/seed/bloomcamz8/300/380', caption: 'Daily pick' },
-  { src: 'https://picsum.photos/seed/bloomcamz9/300/380', caption: 'Little detail' },
-  { src: 'https://picsum.photos/seed/bloomcamz10/300/380', caption: 'Captured moment' },
-  { src: 'https://picsum.photos/seed/bloomcamz11/300/380', caption: 'Shelf story' },
-  { src: 'https://picsum.photos/seed/bloomcamz12/300/380', caption: 'Today’s favorite' },
-  { src: 'https://picsum.photos/seed/bloomcamz13/300/380', caption: 'Just found' },
-  { src: 'https://picsum.photos/seed/bloomcamz14/300/380', caption: 'New piece' },
-  { src: 'https://picsum.photos/seed/bloomcamz15/300/380', caption: 'Packed with care' },
-  { src: 'https://picsum.photos/seed/bloomcamz16/300/380', caption: 'Behind the scenes' },
-  { src: 'https://picsum.photos/seed/bloomcamz17/300/380', caption: 'Small moments' },
-  { src: 'https://picsum.photos/seed/bloomcamz18/300/380', caption: 'Fresh capture' },
-  { src: 'https://picsum.photos/seed/bloomcamz19/300/380', caption: 'Weekend mood' },
-  { src: 'https://picsum.photos/seed/bloomcamz20/300/380', caption: 'Camera roll' },
-  { src: 'https://picsum.photos/seed/bloomcamz21/300/380', caption: 'Found today' },
-  { src: 'https://picsum.photos/seed/bloomcamz22/300/380', caption: 'A closer look' },
-  { src: 'https://picsum.photos/seed/bloomcamz23/300/380', caption: 'From the shelf' },
-  { src: 'https://picsum.photos/seed/bloomcamz24/300/380', caption: 'Just in' },
-  { src: 'https://picsum.photos/seed/bloomcamz25/300/380', caption: 'Bloom moment' },
-  { src: 'https://picsum.photos/seed/bloomcamz26/300/380', caption: 'Latest find' }
-];
-
+/* ---- The Wall: auto-load numbered images from images/TheWall ----
+   No JS editing is needed when you add more photos.
+   Keep naming them continuously:
+   image1.jpeg, image2.jpeg, image3.jpeg ...
+   The loader stops at the first missing number. */
+const WALL_FOLDER = 'images/TheWall';
+const WALL_MAX_IMAGES = 100;
 const wallItemsEl = document.getElementById('wallItems');
 
-if (wallItemsEl) {
-  // A fixed pattern of tilts/string-lengths so the wall looks hand-hung
-  // but stays the same on every reload (nicer than fully random jitter).
-  const pattern = [
-    { tilt: -4, string: 26 },
-    { tilt: 3,  string: 46 },
-    { tilt: -2, string: 18 },
-    { tilt: 5,  string: 36 },
-    { tilt: -5, string: 24 },
-    { tilt: 2,  string: 40 },
-  ];
+const wallPattern = [
+  { tilt: -4, string: 26 },
+  { tilt: 3,  string: 46 },
+  { tilt: -2, string: 18 },
+  { tilt: 5,  string: 36 },
+  { tilt: -5, string: 24 },
+  { tilt: 2,  string: 40 },
+];
 
-  wallPhotos.forEach((photo, i) => {
-    const p = pattern[i % pattern.length];
-
-    const item = document.createElement('div');
-    item.className = 'wall__item';
-
-    const string = document.createElement('div');
-    string.className = 'wall__string';
-    string.style.height = `${p.string}px`;
-
-    const clip = document.createElement('div');
-    clip.className = 'wall__clip';
-
-    const photoBox = document.createElement('div');
-    photoBox.className = 'wall__photo';
-    photoBox.style.transform = `rotate(${p.tilt}deg)`;
-
-    const img = document.createElement('img');
-    img.src = photo.src;
-    img.alt = photo.caption || 'Camera from the Bloom Camz wall';
-    img.loading = 'lazy';
-
-    photoBox.appendChild(img);
-    item.appendChild(string);
-    item.appendChild(clip);
-    item.appendChild(photoBox);
-
-    if (photo.caption) {
-      const caption = document.createElement('p');
-      caption.className = 'wall__caption';
-      caption.textContent = photo.caption;
-      item.appendChild(caption);
-    }
-
-    wallItemsEl.appendChild(item);
+function wallImageExists(src) {
+  return new Promise((resolve) => {
+    const testImg = new Image();
+    testImg.onload = () => resolve(true);
+    testImg.onerror = () => resolve(false);
+    testImg.src = src;
   });
 }
+
+function appendWallPhoto(src, index) {
+  if (!wallItemsEl) return;
+
+  const p = wallPattern[index % wallPattern.length];
+
+  const item = document.createElement('div');
+  item.className = 'wall__item';
+
+  const string = document.createElement('div');
+  string.className = 'wall__string';
+  string.style.height = `${p.string}px`;
+
+  const clip = document.createElement('div');
+  clip.className = 'wall__clip';
+
+  const photoBox = document.createElement('div');
+  photoBox.className = 'wall__photo';
+  photoBox.style.transform = `rotate(${p.tilt}deg)`;
+
+  const img = document.createElement('img');
+  img.src = src;
+  img.alt = `Bloom Camz wall photo ${index + 1}`;
+  img.loading = 'lazy';
+
+  photoBox.appendChild(img);
+  item.appendChild(string);
+  item.appendChild(clip);
+  item.appendChild(photoBox);
+  wallItemsEl.appendChild(item);
+}
+
+async function loadWallPhotos() {
+  if (!wallItemsEl) return;
+
+  wallItemsEl.innerHTML = '';
+
+  for (let i = 1; i <= WALL_MAX_IMAGES; i += 1) {
+    const src = `${WALL_FOLDER}/image${i}.jpeg`;
+    const exists = await wallImageExists(src);
+
+    if (!exists) break;
+    appendWallPhoto(src, i - 1);
+  }
+}
+
+loadWallPhotos();
 
 /* ---- Wall: click-and-drag horizontal scroll (no arrows — just drag or swipe) ---- */
 const wallScroll = document.getElementById('wallScroll');
@@ -567,6 +556,7 @@ if (detailModal) {
 const WHATSAPP_NUMBER = '923094440016'; // +92 309 4440016, no leading zero/plus
 const INSTAGRAM_URL = 'https://www.instagram.com/bloomcamzzz/';
 
+
 const buyModal = document.getElementById('buyModal');
 const buyModalImg = document.getElementById('buyModalImg');
 const buyModalCamera = document.getElementById('buyModalCamera');
@@ -616,6 +606,20 @@ if (buyModal) {
   // through a plain link, so the person DMs however they like.
   buyInstagramLink.href = INSTAGRAM_URL;
 }
+
+
+
+const promiseWhatsappBtn = document.getElementById('promiseWhatsapp');
+
+promiseWhatsappBtn?.addEventListener('click', () => {
+  const message =
+    "Hi Bloom Camz! I have an issue with the camera I received and I'd like to contact you regarding the 48-hour replacement/refund policy.";
+
+  const url =
+    `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+
+  window.open(url, '_blank', 'noopener');
+});
 
 /* ---- Request-a-camera modal: structured fields -> pre-filled WhatsApp message ---- */
 const requestModal = document.getElementById('requestModal');
