@@ -73,7 +73,7 @@ function triggerFlash() {
 /* ---- Coming Soon countdown ----
    EDIT THIS DATE whenever the drop date/time changes. Format:
    'YYYY-MM-DDTHH:MM:SS+05:00' (+05:00 = Pakistan time, keep it unless hosting elsewhere). */
-const COMING_SOON_TARGET = new Date('2026-09-07T21:00:00+05:00');
+const COMING_SOON_TARGET = new Date('2026-09-09T18:00:00+05:00');
 
 const cdDays = document.getElementById('cdDays');
 const cdHours = document.getElementById('cdHours');
