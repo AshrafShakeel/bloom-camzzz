@@ -44,29 +44,19 @@ function lockPageScroll() {
 }
 
 function unlockPageScroll() {
+  // Defer one frame so transitions such as Details -> Buy do not
+  // briefly unlock and jump the background page.
   requestAnimationFrame(() => {
     if (!pageScrollLocked || isAnyDialogOpen()) return;
 
     const restoreY = pageScrollLockY;
-    const html = document.documentElement;
-
-    // Temporarily disable smooth scrolling
-    const oldScrollBehavior = html.style.scrollBehavior;
-    html.style.scrollBehavior = 'auto';
 
     document.body.classList.remove('modal-open');
     document.body.style.top = '';
     document.body.style.paddingRight = pageScrollPaddingRight;
 
     pageScrollLocked = false;
-
-    // Instantly restore exact previous position
-    window.scrollTo(0, restoreY);
-
-    // Enable normal smooth scrolling again
-    requestAnimationFrame(() => {
-      html.style.scrollBehavior = oldScrollBehavior;
-    });
+    window.scrollTo({ top: restoreY, left: 0, behavior: 'auto' });
   });
 }
 
