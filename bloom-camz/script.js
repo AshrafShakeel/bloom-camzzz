@@ -1,8 +1,97 @@
 // ============================================
-// Bloom Camz — interactions
+// Bloom Camz — interactions + data-driven store
 // ============================================
 
+const DATA = window.BLOOM_DATA || { settings: {}, promise: {}, messages: {}, products: [] };
+const SETTINGS = DATA.settings || {};
+const MESSAGES = DATA.messages || {};
+const PRODUCTS = Array.isArray(DATA.products) ? DATA.products : [];
+
+const WHATSAPP_NUMBER = SETTINGS.whatsappNumber || '923094440016';
+const INSTAGRAM_URL = SETTINGS.instagramUrl || 'https://www.instagram.com/bloomcamzzz/';
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function safeDate(value) {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function isProductLive(product, now = new Date()) {
+  if (!product || product.isActive === false) return false;
+  const launch = safeDate(product.launchAt);
+  return !launch || launch <= now;
+}
+
+function isProductUpcoming(product, now = new Date()) {
+  if (!product || product.isActive === false) return false;
+  const launch = safeDate(product.launchAt);
+  return !!launch && launch > now;
+}
+
+function getLiveProducts(now = new Date()) {
+  return PRODUCTS
+    .filter((product) => isProductLive(product, now))
+    .sort((a, b) => (a.sortOrder ?? 9999) - (b.sortOrder ?? 9999));
+}
+
+function getUpcomingProducts(now = new Date()) {
+  return PRODUCTS
+    .filter((product) => isProductUpcoming(product, now))
+    .sort((a, b) => {
+      const dateDiff = safeDate(a.launchAt) - safeDate(b.launchAt);
+      return dateDiff || ((a.sortOrder ?? 9999) - (b.sortOrder ?? 9999));
+    });
+}
+
+function getProductById(id) {
+  return PRODUCTS.find((product) => product.id === id) || null;
+}
+
+function formatMessage(template, replacements = {}) {
+  let text = template || '';
+  Object.entries(replacements).forEach(([key, value]) => {
+    text = text.replaceAll(`{${key}}`, value ?? '');
+  });
+  return text;
+}
+
+function openWhatsApp(message) {
+  const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+  window.open(url, '_blank', 'noopener');
+}
+
+/* ---- Site-config items from data.js ---- */
+const heroImg = document.getElementById('heroImg');
+if (heroImg && SETTINGS.heroImage) heroImg.src = SETTINGS.heroImage;
+
+document.querySelectorAll('.brand__mark').forEach((img) => {
+  if (SETTINGS.logoImage) img.src = SETTINGS.logoImage;
+});
+
+const promiseTitle = document.getElementById('promiseTitle');
+const promiseBody = document.getElementById('promiseBody');
+const promiseWhatsappText = document.getElementById('promiseWhatsappText');
+
+if (promiseTitle && DATA.promise?.title) promiseTitle.textContent = DATA.promise.title;
+if (promiseBody) {
+  promiseBody.innerHTML = '';
+  (DATA.promise?.paragraphs || []).forEach((text) => {
+    const p = document.createElement('p');
+    if (/^Heads up:/i.test(text)) {
+      const strong = document.createElement('strong');
+      strong.textContent = 'Heads up:';
+      p.appendChild(strong);
+      p.appendChild(document.createTextNode(text.replace(/^Heads up:\s*/i, ' ')));
+    } else {
+      p.textContent = text;
+    }
+    promiseBody.appendChild(p);
+  });
+}
+if (promiseWhatsappText && DATA.promise?.whatsappButtonText) {
+  promiseWhatsappText.textContent = DATA.promise.whatsappButtonText;
+}
 
 /* ---- Loader: camera-shutter reveal on first paint ---- */
 const loader = document.getElementById('loader');
@@ -17,7 +106,6 @@ if (loader) {
         loader.addEventListener('transitionend', () => loader.classList.add('is-done'), { once: true });
       }, 500);
     });
-    // Safety net in case 'load' fires very late or transitionend never fires
     setTimeout(() => loader.classList.add('is-closing'), 3000);
     setTimeout(() => loader.classList.add('is-done'), 4000);
   }
@@ -37,7 +125,7 @@ if (progressBar) {
   window.addEventListener('resize', updateProgress);
 }
 
-/* ---- Cursor sparkle trail (desktop/hover-capable devices only) ---- */
+/* ---- Cursor sparkle trail (desktop only) ---- */
 if (!prefersReducedMotion && window.matchMedia('(hover: hover)').matches) {
   const sparkleChars = ['✨', '·', '✦', '✧'];
   let lastSparkle = 0;
@@ -56,7 +144,7 @@ if (!prefersReducedMotion && window.matchMedia('(hover: hover)').matches) {
     document.body.appendChild(sparkle);
 
     sparkle.addEventListener('animationend', () => sparkle.remove());
-    setTimeout(() => sparkle.remove(), 1000); // safety net
+    setTimeout(() => sparkle.remove(), 1000);
   });
 }
 
@@ -67,14 +155,165 @@ function triggerFlash() {
   flash.className = 'flash-overlay';
   document.body.appendChild(flash);
   flash.addEventListener('animationend', () => flash.remove());
-  setTimeout(() => flash.remove(), 700); // safety net
+  setTimeout(() => flash.remove(), 700);
 }
 
-/* ---- Coming Soon countdown ----
-   EDIT THIS DATE whenever the drop date/time changes. Format:
-   'YYYY-MM-DDTHH:MM:SS+05:00' (+05:00 = Pakistan time, keep it unless hosting elsewhere). */
-const COMING_SOON_TARGET = new Date('2026-09-09T18:00:00+05:00');
+/* ============================================
+   Dynamic product collection
+============================================ */
+const productCards = document.getElementById('productCards');
+const polaroidGallery = document.getElementById('polaroidGallery');
+const polaroidGalleryRow = document.getElementById('polaroidGalleryRow');
 
+function getRecentLaunch(product, now = new Date()) {
+  if (!product.announceOnLaunch) return false;
+  const launch = safeDate(product.launchAt);
+  if (!launch || launch > now) return false;
+  const hours = Number(SETTINGS.newDropAlertHours ?? 168);
+  return now - launch <= hours * 60 * 60 * 1000;
+}
+
+function createProductCard(product) {
+  const article = document.createElement('article');
+  article.className = 'card reveal';
+  article.dataset.tilt = '';
+  article.dataset.productId = product.id;
+
+  const frame = document.createElement('div');
+  frame.className = 'card__frame';
+
+  const image = document.createElement('img');
+  image.src = product.cardImage || product.images?.[0] || '';
+  image.alt = `${product.name} digital camera`;
+  image.loading = 'lazy';
+  frame.appendChild(image);
+
+  let badgeText = product.badge || '';
+  let badgeClass = '';
+  if ((product.status || '').toLowerCase() === 'sold') {
+    badgeText = 'Sold';
+  } else if (!badgeText && getRecentLaunch(product)) {
+    badgeText = 'New Drop';
+    badgeClass = ' card__tag--new';
+  }
+
+  if (badgeText) {
+    const tag = document.createElement('span');
+    tag.className = `card__tag${badgeClass}`;
+    tag.textContent = badgeText;
+    frame.appendChild(tag);
+  }
+
+  const body = document.createElement('div');
+  body.className = 'card__body';
+
+  const name = document.createElement('h3');
+  name.className = 'card__name script';
+  name.textContent = product.name;
+
+  const meta = document.createElement('p');
+  meta.className = 'card__meta';
+  meta.textContent = product.meta || '';
+
+  const desc = document.createElement('p');
+  desc.className = 'card__desc';
+  desc.textContent = product.shortDescription || product.description || '';
+
+  const actions = document.createElement('div');
+  actions.className = 'card__row card__row--buy card__actions';
+
+  const details = document.createElement('button');
+  details.type = 'button';
+  details.className = 'btn btn--details';
+  details.dataset.details = product.id;
+  details.textContent = 'Details';
+
+  const buy = document.createElement('button');
+  buy.type = 'button';
+  buy.className = 'btn btn--buy';
+  buy.dataset.buy = '';
+  buy.dataset.productId = product.id;
+
+  if ((product.status || '').toLowerCase() === 'sold') {
+    buy.textContent = 'Sold Out';
+    buy.disabled = true;
+    buy.classList.add('is-disabled');
+  } else {
+    buy.textContent = 'Buy it';
+  }
+
+  actions.append(details, buy);
+  body.append(name, meta, desc, actions);
+  article.append(frame, body);
+  return article;
+}
+
+function renderProducts() {
+  if (!productCards) return;
+  const liveProducts = getLiveProducts();
+  productCards.innerHTML = '';
+
+  if (!liveProducts.length) {
+    const empty = document.createElement('div');
+    empty.className = 'collection-empty';
+    empty.innerHTML = '<span>📷</span><h3>Fresh stock is on the way</h3><p>Check back soon for the next little Bloom Camz drop.</p>';
+    productCards.appendChild(empty);
+    return;
+  }
+
+  liveProducts.forEach((product) => productCards.appendChild(createProductCard(product)));
+  initTiltCards(productCards);
+  observeRevealElements(productCards);
+}
+
+function renderPolaroids() {
+  if (!polaroidGalleryRow || !polaroidGallery) return;
+  const liveProducts = getLiveProducts();
+  const images = [];
+
+  liveProducts.forEach((product) => {
+    (product.images || []).slice(1).forEach((src) => {
+      images.push({ src, name: product.name });
+    });
+  });
+
+  const maxImages = Number(SETTINGS.polaroidMaxImages ?? 8);
+  const selected = images.slice(0, maxImages);
+  const rotations = [
+    { rot: -6, ty: 10 }, { rot: 4, ty: -16 }, { rot: -3, ty: 6 }, { rot: 7, ty: -8 },
+    { rot: -8, ty: 12 }, { rot: 3, ty: -10 }, { rot: 5, ty: 4 }, { rot: -4, ty: -6 }
+  ];
+
+  polaroidGalleryRow.innerHTML = '';
+  polaroidGallery.hidden = !selected.length;
+
+  selected.forEach((item, index) => {
+    const style = rotations[index % rotations.length];
+    const wrap = document.createElement('div');
+    wrap.className = 'polaroid-wrap reveal';
+
+    const figure = document.createElement('figure');
+    figure.className = 'polaroid';
+    figure.style.setProperty('--rot', `${style.rot}deg`);
+    figure.style.setProperty('--ty', `${style.ty}px`);
+
+    const img = document.createElement('img');
+    img.src = item.src;
+    img.alt = `${item.name} detail`;
+    img.loading = 'lazy';
+
+    figure.appendChild(img);
+    wrap.appendChild(figure);
+    polaroidGalleryRow.appendChild(wrap);
+  });
+
+  observeRevealElements(polaroidGalleryRow);
+}
+
+/* ============================================
+   Coming Soon — fully driven by product launchAt
+============================================ */
+const comingSoonSection = document.getElementById('coming-soon');
 const cdDays = document.getElementById('cdDays');
 const cdHours = document.getElementById('cdHours');
 const cdMins = document.getElementById('cdMins');
@@ -82,73 +321,106 @@ const cdSecs = document.getElementById('cdSecs');
 const comingSoonHeading = document.getElementById('comingSoonHeading');
 const comingSoonSub = document.getElementById('comingSoonSub');
 const countdownEl = document.getElementById('countdown');
+const mysteryRow = document.getElementById('mysteryRow');
+const notifyBtn = document.getElementById('notifyBtn');
 
-if (cdDays && cdHours && cdMins && cdSecs) {
-  let countdownDone = false;
+let activeCountdownTarget = null;
+let countdownRefreshLock = false;
 
-  function updateCountdown() {
-    const diff = COMING_SOON_TARGET - new Date();
+function renderComingSoon() {
+  if (!comingSoonSection) return;
+  const upcoming = getUpcomingProducts();
+  const comingSoonNavLink = document.querySelector('.nav__links a[href="#coming-soon"]');
 
-    if (diff <= 0) {
-      cdDays.textContent = '00';
-      cdHours.textContent = '00';
-      cdMins.textContent = '00';
-      cdSecs.textContent = '00';
+  if (!upcoming.length) {
+    comingSoonSection.hidden = true;
+    if (comingSoonNavLink) comingSoonNavLink.hidden = true;
+    activeCountdownTarget = null;
+    return;
+  }
 
-      if (!countdownDone) {
-        countdownDone = true;
-        if (comingSoonHeading) comingSoonHeading.textContent = "They're almost here 👀";
-        if (comingSoonSub) comingSoonSub.textContent = "Final touches are underway — keep an eye on the collection above, they'll be live any moment.";
-        if (countdownEl) countdownEl.classList.add('is-done');
-      }
-      return;
-    }
+  comingSoonSection.hidden = false;
+  if (comingSoonNavLink) comingSoonNavLink.hidden = false;
+  const count = upcoming.length;
+  const noun = count === 1 ? 'camera' : 'cameras';
+  comingSoonHeading.textContent = `${count} new ${noun} dropping soon 👀`;
+  comingSoonSub.textContent = `We're cleaning, testing and charming up ${count === 1 ? 'a fresh find' : `${count} fresh finds`}. Check back — or get notified the second ${count === 1 ? 'it lands' : 'they land'}.`;
 
-    const days = Math.floor(diff / 86400000);
-    const hours = Math.floor((diff % 86400000) / 3600000);
-    const mins = Math.floor((diff % 3600000) / 60000);
-    const secs = Math.floor((diff % 60000) / 1000);
+  activeCountdownTarget = safeDate(upcoming[0].launchAt);
+  countdownEl?.classList.remove('is-done');
 
-    cdDays.textContent = String(days).padStart(2, '0');
-    cdHours.textContent = String(hours).padStart(2, '0');
-    cdMins.textContent = String(mins).padStart(2, '0');
-    cdSecs.textContent = String(secs).padStart(2, '0');
+  if (mysteryRow) {
+    mysteryRow.innerHTML = '';
+    upcoming.slice(0, 8).forEach(() => {
+      const card = document.createElement('div');
+      card.className = 'mystery-card reveal';
+      card.innerHTML = `
+        <div class="mystery-card__glow"></div>
+        <span class="mystery-card__mark">?</span>
+        <span class="mystery-card__ribbon">Coming Soon</span>`;
+      mysteryRow.appendChild(card);
+    });
+    observeRevealElements(mysteryRow);
   }
 
   updateCountdown();
-  setInterval(updateCountdown, 1000);
 }
 
-/* ---- "Notify Me" button -> pings WhatsApp so we can message them when live ---- */
-const notifyBtn = document.getElementById('notifyBtn');
-if (notifyBtn) {
-  notifyBtn.addEventListener('click', () => {
-    const message = "Hi Bloom Camz! 🔔 Please notify me the moment the 3 new cameras drop!";
-    const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
-    triggerFlash();
-    window.open(url, '_blank', 'noopener');
-  });
+function updateCountdown() {
+  if (!activeCountdownTarget || !cdDays || !cdHours || !cdMins || !cdSecs) return;
+  const diff = activeCountdownTarget - new Date();
+
+  if (diff <= 0) {
+    cdDays.textContent = '00';
+    cdHours.textContent = '00';
+    cdMins.textContent = '00';
+    cdSecs.textContent = '00';
+
+    if (!countdownRefreshLock) {
+      countdownRefreshLock = true;
+      setTimeout(() => {
+        renderProductAreas();
+        maybeShowDropAlert();
+        countdownRefreshLock = false;
+      }, 650);
+    }
+    return;
+  }
+
+  const days = Math.floor(diff / 86400000);
+  const hours = Math.floor((diff % 86400000) / 3600000);
+  const mins = Math.floor((diff % 3600000) / 60000);
+  const secs = Math.floor((diff % 60000) / 1000);
+
+  cdDays.textContent = String(days).padStart(2, '0');
+  cdHours.textContent = String(hours).padStart(2, '0');
+  cdMins.textContent = String(mins).padStart(2, '0');
+  cdSecs.textContent = String(secs).padStart(2, '0');
 }
 
-/* ---- The Wall: auto-load numbered images from images/TheWall ----
-   No JS editing is needed when you add more photos.
-   Keep naming them continuously:
-   image1.jpeg, image2.jpeg, image3.jpeg ...
-   The loader stops at the first missing number. */
-const WALL_FOLDER = 'images/TheWall';
-const WALL_MAX_IMAGES = 100;
+setInterval(updateCountdown, 1000);
+
+notifyBtn?.addEventListener('click', () => {
+  triggerFlash();
+  openWhatsApp(MESSAGES.notify || 'Hi Bloom Camz! 🔔 Please notify me when the new cameras drop!');
+});
+
+/* ============================================
+   The Wall — auto-load numbered images
+============================================ */
+const wallCfg = SETTINGS.wall || {};
+const WALL_FOLDER = wallCfg.folder || 'images/TheWall';
+const WALL_PREFIX = wallCfg.prefix || 'image';
+const WALL_EXTENSION = wallCfg.extension || 'jpeg';
+const WALL_MAX_IMAGES = Number(wallCfg.maxImages || 100);
 const wallItemsEl = document.getElementById('wallItems');
 
 const wallPattern = [
-  { tilt: -4, string: 26 },
-  { tilt: 3,  string: 46 },
-  { tilt: -2, string: 18 },
-  { tilt: 5,  string: 36 },
-  { tilt: -5, string: 24 },
-  { tilt: 2,  string: 40 },
+  { tilt: -4, string: 26 }, { tilt: 3, string: 46 }, { tilt: -2, string: 18 },
+  { tilt: 5, string: 36 }, { tilt: -5, string: 24 }, { tilt: 2, string: 40 }
 ];
 
-function wallImageExists(src) {
+function imageExists(src) {
   return new Promise((resolve) => {
     const testImg = new Image();
     testImg.onload = () => resolve(true);
@@ -159,9 +431,7 @@ function wallImageExists(src) {
 
 function appendWallPhoto(src, index) {
   if (!wallItemsEl) return;
-
   const p = wallPattern[index % wallPattern.length];
-
   const item = document.createElement('div');
   item.className = 'wall__item';
 
@@ -182,31 +452,24 @@ function appendWallPhoto(src, index) {
   img.loading = 'lazy';
 
   photoBox.appendChild(img);
-  item.appendChild(string);
-  item.appendChild(clip);
-  item.appendChild(photoBox);
+  item.append(string, clip, photoBox);
   wallItemsEl.appendChild(item);
 }
 
 async function loadWallPhotos() {
   if (!wallItemsEl) return;
-
   wallItemsEl.innerHTML = '';
-
   for (let i = 1; i <= WALL_MAX_IMAGES; i += 1) {
-    const src = `${WALL_FOLDER}/image${i}.jpeg`;
-    const exists = await wallImageExists(src);
-
-    if (!exists) break;
+    const src = `${WALL_FOLDER}/${WALL_PREFIX}${i}.${WALL_EXTENSION}`;
+    if (!(await imageExists(src))) break;
     appendWallPhoto(src, i - 1);
   }
 }
 
 loadWallPhotos();
 
-/* ---- Wall: click-and-drag horizontal scroll (no arrows — just drag or swipe) ---- */
+/* ---- Wall drag / swipe ---- */
 const wallScroll = document.getElementById('wallScroll');
-
 if (wallScroll) {
   let isDown = false;
   let startX = 0;
@@ -231,20 +494,12 @@ if (wallScroll) {
     wallScroll.classList.remove('is-dragging');
   };
 
-  wallScroll.addEventListener('mousedown', (e) => {
-    startDrag(e.clientX);
-    e.preventDefault();
-  });
+  wallScroll.addEventListener('mousedown', (e) => { startDrag(e.clientX); e.preventDefault(); });
   window.addEventListener('mousemove', (e) => duringDrag(e.clientX));
   window.addEventListener('mouseup', endDrag);
-
-  // Prevent link/image click firing right after a real drag
   wallScroll.addEventListener('click', (e) => {
     if (moved) { e.preventDefault(); e.stopPropagation(); }
   }, true);
-
-  // Trackpads/mice with horizontal wheel already scroll natively;
-  // this lets a plain vertical wheel over the wall also move it sideways.
   wallScroll.addEventListener('wheel', (e) => {
     if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
       wallScroll.scrollLeft += e.deltaY;
@@ -253,18 +508,29 @@ if (wallScroll) {
   }, { passive: false });
 }
 
-/* ---- Customer feedback wall (masonry) ----
-   EDIT THIS ARRAY to add more feedback screenshots. Drop the image into
-   images/feedback/ (e.g. Feedback_2.jpeg, Feedback_3.jpeg...) and add a
-   matching line here — nothing else in the code needs to change. */
-const feedbackPhotos = [
-  { src: 'images/feedback/Feedback_1.jpeg', alt: 'Customer feedback screenshot' }
-];
-
+/* ============================================
+   Feedback — auto-load Feedback_1.jpeg, Feedback_2.jpeg...
+============================================ */
+const feedbackCfg = SETTINGS.feedback || {};
+const FEEDBACK_FOLDER = feedbackCfg.folder || 'images/feedback';
+const FEEDBACK_PREFIX = feedbackCfg.prefix || 'Feedback_';
+const FEEDBACK_EXTENSION = feedbackCfg.extension || 'jpeg';
+const FEEDBACK_MAX_IMAGES = Number(feedbackCfg.maxImages || 100);
 const feedbackTilts = [-3, 2, -2, 4, -4, 3, -1, 2];
 const feedbackGridEl = document.getElementById('feedbackGrid');
+const feedbackPhotos = [];
 
-if (feedbackGridEl) {
+async function loadFeedbackPhotos() {
+  if (!feedbackGridEl) return;
+  feedbackGridEl.innerHTML = '';
+  feedbackPhotos.length = 0;
+
+  for (let i = 1; i <= FEEDBACK_MAX_IMAGES; i += 1) {
+    const src = `${FEEDBACK_FOLDER}/${FEEDBACK_PREFIX}${i}.${FEEDBACK_EXTENSION}`;
+    if (!(await imageExists(src))) break;
+    feedbackPhotos.push({ src, alt: `Customer feedback screenshot ${i}` });
+  }
+
   feedbackPhotos.forEach((photo, i) => {
     const wrap = document.createElement('div');
     wrap.className = 'feedback__wrap reveal';
@@ -277,46 +543,45 @@ if (feedbackGridEl) {
 
     const img = document.createElement('img');
     img.src = photo.src;
-    img.alt = photo.alt || 'Customer feedback screenshot';
+    img.alt = photo.alt;
     img.loading = 'lazy';
 
     const heart = document.createElement('span');
     heart.className = 'feedback__heart';
     heart.innerHTML = '<i class="bi bi-heart-fill"></i>';
 
-    card.appendChild(img);
-    card.appendChild(heart);
+    card.append(img, heart);
     card.addEventListener('click', () => openFeedbackLightbox(i));
-
     wrap.appendChild(card);
     feedbackGridEl.appendChild(wrap);
   });
+
+  observeRevealElements(feedbackGridEl);
 }
 
-/* ---- Feedback lightbox: tap a screenshot to see it full size ---- */
+loadFeedbackPhotos();
+
+/* ---- Feedback lightbox ---- */
 const feedbackLightbox = document.getElementById('feedbackLightbox');
 const feedbackLightboxImg = document.getElementById('feedbackLightboxImg');
 const feedbackPrev = document.getElementById('feedbackPrev');
 const feedbackNext = document.getElementById('feedbackNext');
-
 let activeFeedbackIndex = 0;
 
 function renderFeedbackLightbox() {
   const photo = feedbackPhotos[activeFeedbackIndex];
   if (!photo || !feedbackLightboxImg) return;
   feedbackLightboxImg.src = photo.src;
-  feedbackLightboxImg.alt = photo.alt || 'Customer feedback screenshot';
+  feedbackLightboxImg.alt = photo.alt;
 }
 
 function openFeedbackLightbox(index) {
-  if (!feedbackLightbox) return;
+  if (!feedbackLightbox || !feedbackPhotos.length) return;
   activeFeedbackIndex = index;
   renderFeedbackLightbox();
-
   const hasMultiple = feedbackPhotos.length > 1;
   feedbackPrev.hidden = !hasMultiple;
   feedbackNext.hidden = !hasMultiple;
-
   feedbackLightbox.classList.add('is-open');
   feedbackLightbox.setAttribute('aria-hidden', 'false');
 }
@@ -328,109 +593,20 @@ function closeFeedbackLightbox() {
 }
 
 if (feedbackLightbox) {
-  feedbackLightbox.querySelectorAll('[data-feedback-close]').forEach((el) => {
-    el.addEventListener('click', closeFeedbackLightbox);
-  });
-
+  feedbackLightbox.querySelectorAll('[data-feedback-close]').forEach((el) => el.addEventListener('click', closeFeedbackLightbox));
   feedbackPrev?.addEventListener('click', () => {
     activeFeedbackIndex = (activeFeedbackIndex - 1 + feedbackPhotos.length) % feedbackPhotos.length;
     renderFeedbackLightbox();
   });
-
   feedbackNext?.addEventListener('click', () => {
     activeFeedbackIndex = (activeFeedbackIndex + 1) % feedbackPhotos.length;
     renderFeedbackLightbox();
   });
-
-  document.addEventListener('keydown', (e) => {
-    if (!feedbackLightbox.classList.contains('is-open')) return;
-    if (e.key === 'Escape') closeFeedbackLightbox();
-    if (e.key === 'ArrowLeft' && feedbackPhotos.length > 1) feedbackPrev.click();
-    if (e.key === 'ArrowRight' && feedbackPhotos.length > 1) feedbackNext.click();
-  });
 }
 
-/* ---- Camera details modal: gallery + description/specs ---- */
-const cameraDetails = {
-  'samsung-s860': {
-    name: 'Samsung S860',
-    meta: '8.1MP · Y2K silver body · charm included',
-    description: 'A classic compact digicam for that nostalgic Y2K look ✨ Perfect for everyday snapshots, flash photos & capturing memories with a vintage feel.',
-    images: [
-      'images/products/samsung-s860-crop.jpg',
-      'images/products/samsung-s860-crop2.jpg',
-      'images/products/samsung-s860-crop3.jpg',
-      'images/products/samsung-s860-crop4.jpg'
-    ],
-    specs: [
-      '8.1MP CCD Sensor',
-      '3× Optical Zoom',
-      '5× Digital Zoom',
-      '2.4” LCD Display',
-      'Digital Image Stabilization (DIS)',
-      'Face Detection',
-      'Macro / Close-up Mode',
-      'Built-in Flash',
-      'Self-Timer',
-      'ISO 80–1000',
-      'Multiple Scene Modes'
-    ]
-  },
-  'fujifilm-xp10': {
-    name: 'Fujifilm FinePix XP10',
-    meta: '12MP · rugged waterproof · champagne shell',
-    description: 'A perfect little digicam for capturing that dreamy vintage & Y2K aesthetic ✨ Fully checked and ready to capture your memories. Perfect for everyday snaps, travel, outings, parties & that nostalgic digicam look.',
-    images: [
-      'images/products/fujifilm-xp10-crop.jpg',
-      'images/products/fujifilm-xp10-crop2.jpg',
-      'images/products/fujifilm-xp10-crop3.jpg',
-      'images/products/fujifilm-xp10-crop4.jpg'
-    ],
-    specs: [
-      '12MP CCD Sensor',
-      '5× Optical Zoom',
-      '36–180mm Equivalent Lens',
-      '2.7” LCD Display',
-      'Digital Image Stabilization',
-      'Face Detection + Macro Mode',
-      'ISO 100–1600',
-      'Built-in Flash',
-      'Self-Timer',
-      'Video: HD 720p @ 30fps',
-      'Storage: SD / SDHC',
-      'Battery: Rechargeable Li-ion',
-      'Condition: 8/10 — Pre-loved with normal signs of use'
-    ]
-  },
-  'benq-c1020': {
-    name: 'BenQ DC C1020',
-    meta: '10.1MP · classic Y2K compact · charm included',
-    description: 'A fun little compact digicam with a classic Y2K/vintage digital-camera feel ✨ Perfect for everyday snaps, flash photography, parties, outings and capturing nostalgic memories.',
-    images: [
-      'images/products/benq-c1020-crop.jpg',
-      'images/products/benq-c1020-crop2.jpg',
-      'images/products/benq-c1020-crop3.jpg',
-      'images/products/benq-c1020-crop4.jpg'
-    ],
-    specs: [
-      '10.1MP CCD Sensor',
-      '3× Optical Zoom',
-      '2.5” LCD Display',
-      'Digital Image Stabilization',
-      'Face Detection',
-      'Smile Detection',
-      'Blink Detection',
-      'Built-in Flash',
-      'Self-Timer',
-      'Macro Mode',
-      'Video: Recording with sound',
-      'Storage: SD / SDHC',
-      'Battery: 2× AA batteries',
-      'Condition: 9/10 — Pre-loved with normal signs of use'
-    ]
-  }
-};
-
+/* ============================================
+   Camera details modal — product data comes from data.js
+============================================ */
 const detailModal = document.getElementById('detailModal');
 const detailMainImg = document.getElementById('detailMainImg');
 const detailThumbs = document.getElementById('detailThumbs');
@@ -447,60 +623,59 @@ let activeDetail = null;
 let activeDetailImageIndex = 0;
 
 function renderDetailImage() {
-  if (!activeDetail || !activeDetail.images.length) return;
-
+  if (!activeDetail || !activeDetail.images?.length) return;
   const src = activeDetail.images[activeDetailImageIndex];
   detailMainImg.src = src;
   detailMainImg.alt = `${activeDetail.name} photo ${activeDetailImageIndex + 1}`;
-
   detailThumbs.querySelectorAll('.detail-modal__thumb').forEach((thumb, index) => {
     thumb.classList.toggle('is-active', index === activeDetailImageIndex);
   });
 }
 
-function openDetailModal(detailKey) {
-  const detail = cameraDetails[detailKey];
-  if (!detail || !detailModal) return;
+function openDetailModal(productId) {
+  const product = getProductById(productId);
+  if (!product || !isProductLive(product) || !detailModal) return;
 
-  activeDetail = detail;
+  activeDetail = product;
   activeDetailImageIndex = 0;
+  const images = product.images?.length ? product.images : [product.cardImage].filter(Boolean);
+  activeDetail.images = images;
 
-  detailModalTitle.textContent = detail.name;
-  detailModalMeta.textContent = detail.meta || '';
-  detailModalDescription.textContent = detail.description || '';
+  detailModalTitle.textContent = product.name;
+  detailModalMeta.textContent = product.meta || '';
+  detailModalDescription.textContent = product.description || product.shortDescription || '';
 
   detailModalSpecs.innerHTML = '';
-  (detail.specs || []).forEach((spec) => {
+  (product.specs || []).forEach((spec) => {
     const li = document.createElement('li');
     li.textContent = spec;
     detailModalSpecs.appendChild(li);
   });
-  detailSpecWrap.hidden = !(detail.specs && detail.specs.length);
+  detailSpecWrap.hidden = !(product.specs && product.specs.length);
 
   detailThumbs.innerHTML = '';
-  detail.images.forEach((src, index) => {
+  images.forEach((src, index) => {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'detail-modal__thumb';
-    btn.setAttribute('aria-label', `View ${detail.name} photo ${index + 1}`);
-
+    btn.setAttribute('aria-label', `View ${product.name} photo ${index + 1}`);
     const img = document.createElement('img');
     img.src = src;
     img.alt = '';
     btn.appendChild(img);
-
-    btn.addEventListener('click', () => {
-      activeDetailImageIndex = index;
-      renderDetailImage();
-    });
-
+    btn.addEventListener('click', () => { activeDetailImageIndex = index; renderDetailImage(); });
     detailThumbs.appendChild(btn);
   });
 
-  const hasMultipleImages = detail.images.length > 1;
-  detailPrev.hidden = !hasMultipleImages;
-  detailNext.hidden = !hasMultipleImages;
-  detailThumbs.hidden = !hasMultipleImages;
+  const multiple = images.length > 1;
+  detailPrev.hidden = !multiple;
+  detailNext.hidden = !multiple;
+  detailThumbs.hidden = !multiple;
+
+  const sold = (product.status || '').toLowerCase() === 'sold';
+  detailBuyBtn.disabled = sold;
+  detailBuyBtn.classList.toggle('is-disabled', sold);
+  detailBuyBtn.textContent = sold ? 'Sold Out' : 'Buy it';
 
   renderDetailImage();
   detailModal.classList.add('is-open');
@@ -514,58 +689,56 @@ function closeDetailModal() {
 }
 
 if (detailModal) {
-  document.querySelectorAll('[data-details]').forEach((btn) => {
-    btn.addEventListener('click', () => openDetailModal(btn.dataset.details));
-  });
-
-  detailModal.querySelectorAll('[data-detail-close]').forEach((el) => {
-    el.addEventListener('click', closeDetailModal);
-  });
-
+  detailModal.querySelectorAll('[data-detail-close]').forEach((el) => el.addEventListener('click', closeDetailModal));
   detailPrev.addEventListener('click', () => {
-    if (!activeDetail) return;
+    if (!activeDetail?.images?.length) return;
     activeDetailImageIndex = (activeDetailImageIndex - 1 + activeDetail.images.length) % activeDetail.images.length;
     renderDetailImage();
   });
-
   detailNext.addEventListener('click', () => {
-    if (!activeDetail) return;
+    if (!activeDetail?.images?.length) return;
     activeDetailImageIndex = (activeDetailImageIndex + 1) % activeDetail.images.length;
     renderDetailImage();
   });
-
   detailBuyBtn.addEventListener('click', () => {
-    if (!activeDetail) return;
-    const cameraName = activeDetail.name;
-    const imageSrc = activeDetail.images[activeDetailImageIndex] || activeDetail.images[0];
+    if (!activeDetail || detailBuyBtn.disabled) return;
+    const imageSrc = activeDetail.images[activeDetailImageIndex] || activeDetail.cardImage;
+    const name = activeDetail.name;
     closeDetailModal();
     triggerFlash();
-    openBuyModal(cameraName, imageSrc);
-  });
-
-  document.addEventListener('keydown', (e) => {
-    if (!detailModal.classList.contains('is-open')) return;
-
-    if (e.key === 'Escape') closeDetailModal();
-    if (e.key === 'ArrowLeft' && activeDetail?.images.length > 1) detailPrev.click();
-    if (e.key === 'ArrowRight' && activeDetail?.images.length > 1) detailNext.click();
+    openBuyModal(name, imageSrc);
   });
 }
 
-/* ---- Buy modal: choose WhatsApp or Instagram ---- */
-const WHATSAPP_NUMBER = '923094440016'; // +92 309 4440016, no leading zero/plus
-const INSTAGRAM_URL = 'https://www.instagram.com/bloomcamzzz/';
+/* ---- Product event delegation (works for future launches too) ---- */
+productCards?.addEventListener('click', (e) => {
+  const detailsBtn = e.target.closest('[data-details]');
+  if (detailsBtn) {
+    openDetailModal(detailsBtn.dataset.details);
+    return;
+  }
 
+  const buyBtn = e.target.closest('[data-buy]');
+  if (buyBtn && !buyBtn.disabled) {
+    const product = getProductById(buyBtn.dataset.productId);
+    if (!product) return;
+    triggerFlash();
+    openBuyModal(product.name, product.cardImage || product.images?.[0] || '');
+  }
+});
 
+/* ============================================
+   Buy modal
+============================================ */
 const buyModal = document.getElementById('buyModal');
 const buyModalImg = document.getElementById('buyModalImg');
 const buyModalCamera = document.getElementById('buyModalCamera');
 const buyWhatsappBtn = document.getElementById('buyWhatsapp');
 const buyInstagramLink = document.getElementById('buyInstagram');
-
 let currentCameraName = '';
 
 function openBuyModal(cameraName, imageSrc) {
+  if (!buyModal) return;
   currentCameraName = cameraName;
   buyModalCamera.textContent = cameraName;
   buyModalImg.src = imageSrc;
@@ -575,53 +748,38 @@ function openBuyModal(cameraName, imageSrc) {
 }
 
 function closeBuyModal() {
+  if (!buyModal) return;
   buyModal.classList.remove('is-open');
   buyModal.setAttribute('aria-hidden', 'true');
 }
 
 if (buyModal) {
-  document.querySelectorAll('[data-buy]').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      triggerFlash();
-      openBuyModal(btn.dataset.camera, btn.dataset.image);
-    });
-  });
-
-  buyModal.querySelectorAll('[data-close]').forEach((el) => {
-    el.addEventListener('click', closeBuyModal);
-  });
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') closeBuyModal();
-  });
-
+  buyModal.querySelectorAll('[data-close]').forEach((el) => el.addEventListener('click', closeBuyModal));
   buyWhatsappBtn.addEventListener('click', () => {
-    const message = `Hi Bloom Camz! I'd like to buy the ${currentCameraName} 📷`;
-    const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+    const template = MESSAGES.buy || "Hi Bloom Camz! I'd like to buy the {camera} 📷";
     triggerFlash();
-    window.open(url, '_blank', 'noopener');
+    openWhatsApp(formatMessage(template, { camera: currentCameraName }));
   });
-
-  // Instagram just opens the profile — no per-message prefill is possible
-  // through a plain link, so the person DMs however they like.
   buyInstagramLink.href = INSTAGRAM_URL;
 }
 
-
-
+/* ---- Promise WhatsApp button ---- */
 const promiseWhatsappBtn = document.getElementById('promiseWhatsapp');
-
 promiseWhatsappBtn?.addEventListener('click', () => {
-  const message =
-    "Hi Bloom Camz! I have an issue with the camera I received and I'd like to contact you regarding the 48-hour replacement/refund policy.";
-
-  const url =
-    `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
-
-  window.open(url, '_blank', 'noopener');
+  openWhatsApp(DATA.promise?.whatsappMessage || 'Hi Bloom Camz! I need help with a camera I received.');
 });
 
-/* ---- Request-a-camera modal: structured fields -> pre-filled WhatsApp message ---- */
+/* ---- General Message to Order ---- */
+const messageOrderBtn = document.getElementById('messageOrderBtn');
+messageOrderBtn?.addEventListener('click', (e) => {
+  e.preventDefault();
+  triggerFlash();
+  openWhatsApp(MESSAGES.generalOrder || "Hi Bloom Camz! 📷 I'd like to place an order.");
+});
+
+/* ============================================
+   Request-a-camera modal
+============================================ */
 const requestModal = document.getElementById('requestModal');
 const openRequestBtn = document.getElementById('openRequestModal');
 const reqModelInput = document.getElementById('reqModel');
@@ -638,7 +796,7 @@ function openRequestModal() {
   if (!requestModal) return;
   requestModal.classList.add('is-open');
   requestModal.setAttribute('aria-hidden', 'false');
-  setTimeout(() => reqModelInput && reqModelInput.focus(), 250);
+  setTimeout(() => reqModelInput?.focus(), 250);
 }
 
 function closeRequestModal() {
@@ -656,29 +814,14 @@ function shakeField(el) {
 
 if (requestModal) {
   openRequestBtn?.addEventListener('click', openRequestModal);
-
-  requestModal.querySelectorAll('[data-request-close]').forEach((el) => {
-    el.addEventListener('click', closeRequestModal);
-  });
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && requestModal.classList.contains('is-open')) closeRequestModal();
-  });
-
-  reqCustom?.addEventListener('input', () => {
-    requestCount.textContent = reqCustom.value.length;
-  });
-
-  // "No budget" checkbox disables + clears the from/to range fields
+  requestModal.querySelectorAll('[data-request-close]').forEach((el) => el.addEventListener('click', closeRequestModal));
+  reqCustom?.addEventListener('input', () => { requestCount.textContent = reqCustom.value.length; });
   reqNoBudget?.addEventListener('change', () => {
     const disabled = reqNoBudget.checked;
     requestBudgetRow.classList.toggle('is-disabled', disabled);
     reqBudgetFrom.disabled = disabled;
     reqBudgetTo.disabled = disabled;
-    if (disabled) {
-      reqBudgetFrom.value = '';
-      reqBudgetTo.value = '';
-    }
+    if (disabled) { reqBudgetFrom.value = ''; reqBudgetTo.value = ''; }
   });
 
   requestSendBtn?.addEventListener('click', () => {
@@ -689,38 +832,18 @@ if (requestModal) {
     const seenPrice = reqSeenPrice.value.trim();
     const custom = reqCustom.value.trim();
 
-    // Require at least a model name or a custom note — something to go on
-    if (!model && !custom) {
-      shakeField(reqModelInput);
-      return;
-    }
+    if (!model && !custom) { shakeField(reqModelInput); return; }
 
     const lines = ["Hi Bloom Camz! ✨ I'm looking for a camera:", ''];
     lines.push(`Model: ${model || 'Not sure yet — open to suggestions'}`);
-
-    if (noBudget) {
-      lines.push('Budget: No budget in mind, any range works');
-    } else if (from || to) {
-      const fromText = from ? `Rs. ${from}` : 'Rs. 0';
-      const toText = to ? `Rs. ${to}` : 'open';
-      lines.push(`Budget: ${fromText} to ${toText}`);
-    }
-
-    if (seenPrice) {
-      lines.push(`Seen it elsewhere for: ${seenPrice}`);
-    }
-
-    if (custom) {
-      lines.push(`Notes: ${custom}`);
-    }
-
-    const message = lines.join('\n');
-    const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+    if (noBudget) lines.push('Budget: No budget in mind, any range works');
+    else if (from || to) lines.push(`Budget: ${from ? `Rs. ${from}` : 'Rs. 0'} to ${to ? `Rs. ${to}` : 'open'}`);
+    if (seenPrice) lines.push(`Seen it elsewhere for: ${seenPrice}`);
+    if (custom) lines.push(`Notes: ${custom}`);
 
     triggerFlash();
-    window.open(url, '_blank', 'noopener');
+    openWhatsApp(lines.join('\n'));
 
-    // Reset the form
     reqModelInput.value = '';
     reqBudgetFrom.value = '';
     reqBudgetTo.value = '';
@@ -731,104 +854,196 @@ if (requestModal) {
     reqSeenPrice.value = '';
     reqCustom.value = '';
     requestCount.textContent = '0';
-
     closeRequestModal();
   });
 }
 
-/* ---- Hero: mouse-driven 3D tilt on the floating camera ---- */
+/* ============================================
+   New Drop alert — once per browser per fresh launch
+============================================ */
+const dropModal = document.getElementById('dropModal');
+const dropModalTitle = document.getElementById('dropModalTitle');
+const dropModalSub = document.getElementById('dropModalSub');
+const dropModalProducts = document.getElementById('dropModalProducts');
+const dropViewBtn = document.getElementById('dropViewBtn');
+
+function dropStorageKey(product) {
+  return `bloomcamz_seen_drop_${product.id}_${product.launchAt || 'launch'}`;
+}
+
+function wasDropSeen(product) {
+  try { return localStorage.getItem(dropStorageKey(product)) === '1'; }
+  catch { return false; }
+}
+
+function markDropSeen(product) {
+  try { localStorage.setItem(dropStorageKey(product), '1'); }
+  catch { /* storage can be unavailable in strict/private modes */ }
+}
+
+function getFreshUnseenDrops() {
+  const now = new Date();
+  return getLiveProducts(now).filter((product) => getRecentLaunch(product, now) && !wasDropSeen(product));
+}
+
+function openDropModal(products) {
+  if (!dropModal || !products.length) return;
+  dropModalTitle.textContent = MESSAGES.newDropTitle || 'New cameras are live ✨';
+  dropModalSub.textContent = MESSAGES.newDropSubtitle || 'Fresh Bloom Camz finds just landed.';
+  dropModalProducts.innerHTML = '';
+
+  products.slice(0, 4).forEach((product, index) => {
+    const item = document.createElement('div');
+    item.className = 'drop-modal__product';
+    item.style.setProperty('--drop-delay', `${index * 90}ms`);
+
+    const img = document.createElement('img');
+    img.src = product.cardImage || product.images?.[0] || '';
+    img.alt = product.name;
+
+    const name = document.createElement('span');
+    name.textContent = product.name;
+    item.append(img, name);
+    dropModalProducts.appendChild(item);
+  });
+
+  products.forEach(markDropSeen);
+  dropModal.classList.add('is-open');
+  dropModal.setAttribute('aria-hidden', 'false');
+  document.body.classList.add('modal-lock');
+}
+
+function closeDropModal() {
+  if (!dropModal) return;
+  dropModal.classList.remove('is-open');
+  dropModal.setAttribute('aria-hidden', 'true');
+  document.body.classList.remove('modal-lock');
+}
+
+function maybeShowDropAlert() {
+  const fresh = getFreshUnseenDrops();
+  if (!fresh.length) return;
+  setTimeout(() => openDropModal(fresh), loader && !loader.classList.contains('is-done') ? 1600 : 450);
+}
+
+if (dropModal) {
+  dropModal.querySelectorAll('[data-drop-close]').forEach((el) => el.addEventListener('click', closeDropModal));
+  dropViewBtn?.addEventListener('click', () => {
+    closeDropModal();
+    document.getElementById('collection')?.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth' });
+  });
+}
+
+/* ============================================
+   Hero 3D tilt
+============================================ */
 const heroStage = document.getElementById('heroStage');
 const heroCharm = document.getElementById('heroCharm');
-
 if (heroStage && heroCharm && window.matchMedia('(hover: hover)').matches) {
   document.addEventListener('mousemove', (e) => {
-    const rect = heroStage.getBoundingClientRect();
-    const cx = rect.left + rect.width / 2;
-    const cy = rect.top + rect.height / 2;
-
-    // distance from viewport center, normalized
     const dx = (e.clientX - window.innerWidth / 2) / (window.innerWidth / 2);
     const dy = (e.clientY - window.innerHeight / 2) / (window.innerHeight / 2);
-
-    const rotateY = dx * 16;   // left/right tilt
-    const rotateX = -dy * 10;  // up/down tilt
-
     heroCharm.style.animation = 'none';
-    heroCharm.style.transform = `rotateX(${8 + rotateX}deg) rotateY(${-10 + rotateY}deg)`;
+    heroCharm.style.transform = `rotateX(${8 + (-dy * 10)}deg) rotateY(${-10 + (dx * 16)}deg)`;
   });
+  document.addEventListener('mouseleave', () => { heroCharm.style.animation = 'float 6s ease-in-out infinite'; });
+}
 
-  document.addEventListener('mouseleave', () => {
-    heroCharm.style.animation = 'float 6s ease-in-out infinite';
+/* ============================================
+   Product card tilt — reusable after dynamic renders
+============================================ */
+function initTiltCards(root = document) {
+  if (!window.matchMedia('(hover: hover)').matches) return;
+  root.querySelectorAll('[data-tilt]').forEach((card) => {
+    if (card.dataset.tiltReady === '1') return;
+    card.dataset.tiltReady = '1';
+    const maxTilt = 9;
+    card.addEventListener('mousemove', (e) => {
+      const rect = card.getBoundingClientRect();
+      const px = (e.clientX - rect.left) / rect.width;
+      const py = (e.clientY - rect.top) / rect.height;
+      const rotateY = (px - 0.5) * maxTilt * 2;
+      const rotateX = -(py - 0.5) * maxTilt * 2;
+      card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-4px)`;
+    });
+    card.addEventListener('mouseleave', () => {
+      card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0)';
+    });
   });
 }
 
-/* ---- Product cards: 3D tilt that follows the cursor ---- */
-const tiltCards = document.querySelectorAll('[data-tilt]');
+/* ============================================
+   Scroll reveal — reusable for dynamic content
+============================================ */
+let revealObserver = null;
+if ('IntersectionObserver' in window) {
+  revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-visible');
+        revealObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15, rootMargin: '0px 0px -60px 0px' });
+}
 
-tiltCards.forEach((card) => {
-  const maxTilt = 9;
-
-  card.addEventListener('mousemove', (e) => {
-    const rect = card.getBoundingClientRect();
-    const px = (e.clientX - rect.left) / rect.width;   // 0 -> 1
-    const py = (e.clientY - rect.top) / rect.height;    // 0 -> 1
-
-    const rotateY = (px - 0.5) * maxTilt * 2;
-    const rotateX = -(py - 0.5) * maxTilt * 2;
-
-    card.style.transform =
-      `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-4px)`;
+function observeRevealElements(root = document) {
+  root.querySelectorAll('.reveal:not(.is-visible)').forEach((el) => {
+    if (revealObserver) revealObserver.observe(el);
+    else el.classList.add('is-visible');
   });
+}
 
-  card.addEventListener('mouseleave', () => {
-    card.style.transform =
-      'perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0)';
-  });
+/* ---- Global Escape key for open dialogs ---- */
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    if (dropModal?.classList.contains('is-open')) closeDropModal();
+    if (detailModal?.classList.contains('is-open')) closeDetailModal();
+    if (buyModal?.classList.contains('is-open')) closeBuyModal();
+    if (requestModal?.classList.contains('is-open')) closeRequestModal();
+    if (feedbackLightbox?.classList.contains('is-open')) closeFeedbackLightbox();
+  }
+
+  if (detailModal?.classList.contains('is-open') && activeDetail?.images?.length > 1) {
+    if (e.key === 'ArrowLeft') detailPrev.click();
+    if (e.key === 'ArrowRight') detailNext.click();
+  }
+
+  if (feedbackLightbox?.classList.contains('is-open') && feedbackPhotos.length > 1) {
+    if (e.key === 'ArrowLeft') feedbackPrev.click();
+    if (e.key === 'ArrowRight') feedbackNext.click();
+  }
 });
 
-/* ---- Scroll reveal ---- */
-const revealEls = document.querySelectorAll('.reveal');
-
-if ('IntersectionObserver' in window) {
-  const io = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('is-visible');
-          io.unobserve(entry.target);
-        }
-      });
-    },
-    { threshold: 0.15, rootMargin: '0px 0px -60px 0px' }
-  );
-  revealEls.forEach((el) => io.observe(el));
-} else {
-  revealEls.forEach((el) => el.classList.add('is-visible'));
-}
-
-/* ---- Mobile nav toggle (simple show/hide of the links list) ---- */
+/* ---- Mobile nav ---- */
 const burger = document.getElementById('burger');
 const navLinks = document.querySelector('.nav__links');
-
 if (burger && navLinks) {
   burger.addEventListener('click', () => {
     const open = navLinks.classList.toggle('nav__links--open');
     burger.setAttribute('aria-expanded', open ? 'true' : 'false');
   });
-
   navLinks.querySelectorAll('a').forEach((link) => {
-    link.addEventListener('click', () => {
-      navLinks.classList.remove('nav__links--open');
-    });
+    link.addEventListener('click', () => navLinks.classList.remove('nav__links--open'));
   });
 }
 
-/* ---- Nav background strengthens after scrolling past hero ---- */
+/* ---- Nav background ---- */
 const nav = document.getElementById('nav');
 window.addEventListener('scroll', () => {
-  if (window.scrollY > 40) {
-    nav.style.boxShadow = '0 4px 20px rgba(43,38,34,.08)';
-  } else {
-    nav.style.boxShadow = 'none';
-  }
-});
+  if (!nav) return;
+  nav.style.boxShadow = window.scrollY > 40 ? '0 4px 20px rgba(43,38,34,.08)' : 'none';
+}, { passive: true });
+
+/* ---- Render all data-driven areas ---- */
+function renderProductAreas() {
+  renderProducts();
+  renderPolaroids();
+  renderComingSoon();
+}
+
+renderProductAreas();
+observeRevealElements(document);
+initTiltCards(document);
+
+window.addEventListener('load', maybeShowDropAlert);

@@ -1,0 +1,93 @@
+BLOOM CAMZ — AB DAILY UPDATE SIRF data.js SE
+================================================
+
+1) NEW CAMERA ADD KARNA
+-----------------------
+- Camera images images/products/ folder mein rakho.
+- data.js kholo.
+- Neeche 3 "UPCOMING CAMERA SLOT" already diye hue hain.
+- Kisi slot mein:
+  id, name, meta, shortDescription, description, cardImage, images, specs fill karo.
+- isActive: true kar do.
+- launchAt mein Pakistan date/time do, example:
+  launchAt: '2026-09-15T18:00:00+05:00'
+- announceOnLaunch: true rehne do.
+
+RESULT:
+- Launch time se PEHLE camera Collection mein nahi dikhega.
+- Coming Soon section automatically usko count karega.
+- Launch time hote hi camera automatically Collection mein aa jayega.
+- User ki first visit after launch par professional "New cameras are live" popup aayega.
+- Popup har browser par us drop ke liye sirf ek baar aayega.
+
+2) SOLD / AVAILABLE
+-------------------
+status: 'available'
+status: 'sold'
+
+Sold karne par card par SOLD aur Buy button disabled ho jayega.
+
+3) CAMERA IMAGES
+----------------
+cardImage = card par main image.
+images = Details popup ki full gallery.
+Jitni marzi images array mein add kar sakte ho.
+
+4) FIRST TOP IMAGE
+------------------
+Default:
+images/FirstView/image.jpg
+
+Bas isi file ko replace kar do.
+Ya data.js -> settings.heroImage change kar do.
+
+5) THE WALL
+-----------
+Folder:
+images/TheWall/
+
+Naming continuously rakho:
+image1.jpeg
+image2.jpeg
+image3.jpeg
+image4.jpeg
+...
+
+Code edit nahi karna.
+
+6) FEEDBACK
+-----------
+Folder:
+images/feedback/
+
+Naming continuously rakho:
+Feedback_1.jpeg
+Feedback_2.jpeg
+Feedback_3.jpeg
+...
+
+Code edit nahi karna.
+
+7) WHATSAPP / INSTAGRAM
+-----------------------
+data.js -> settings mein sirf ek jagah change karo:
+whatsappNumber
+instagramUrl
+
+Buy, Request, Notify, Promise aur Message to Order sab isi central value ko use karte hain.
+
+8) BLOOM CAMZ PROMISE
+---------------------
+data.js -> promise -> paragraphs
+Yahin se full promise text edit hoga.
+
+9) NEW DROP POPUP KITNE DIN TAK ELIGIBLE RAHE
+--------------------------------------------
+data.js -> settings.newDropAlertHours
+168 = 7 days.
+
+IMPORTANT
+---------
+- Existing images folder delete mat karna.
+- New deployment ke liye index.html, style.css, script.js, data.js GitHub par push karna.
+- Uske baad normal product updates mein mostly sirf data.js + new images push karne honge.

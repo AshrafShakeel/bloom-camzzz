@@ -105,63 +105,15 @@
     <p class="section__sub">Tested, cleaned, and dressed with a beaded charm before it ships. Slots move fast — one of each.</p>
   </div>
 
-  <div class="cards">
-
-    <article class="card reveal" data-tilt>
-      <div class="card__frame">
-        <img src="images/products/samsung-s860-crop.jpg" alt="Samsung S860 digital camera">
-        <span class="card__tag">sold</span>
-      </div>
-      <div class="card__body">
-        <h3 class="card__name script">Samsung S860</h3>
-        <p class="card__meta">8.1MP · Y2K silver body · charm included</p>
-        <p class="card__desc">Compact and pocketable with that unmistakable early-2000s point-and-shoot glow. Comes with its own little beaded dangle.</p>
-        <div class="card__row card__row--buy card__actions">
-          <button type="button" class="btn btn--details" data-details="samsung-s860">Details</button>
-          <button type="button" class="btn btn--buy" data-buy data-camera="Samsung S860" data-image="images/products/samsung-s860-crop.jpg">Buy it</button>
-        </div>
-      </div>
-    </article>
-
-    <article class="card reveal" data-tilt>
-      <div class="card__frame">
-        <img src="images/products/fujifilm-xp10-crop.jpg" alt="Fujifilm FinePix XP10 digital camera">
-      </div>
-      <div class="card__body">
-        <h3 class="card__name script">Fujifilm FinePix XP10</h3>
-        <p class="card__meta">12MP · rugged waterproof · champagne shell</p>
-        <p class="card__desc">The tough little one — take it to the beach, the rain, wherever. Soft grain, dreamy flash shots.</p>
-        <div class="card__row card__row--buy card__actions">
-          <button type="button" class="btn btn--details" data-details="fujifilm-xp10">Details</button>
-          <button type="button" class="btn btn--buy" data-buy data-camera="Fujifilm FinePix XP10" data-image="images/products/fujifilm-xp10-crop.jpg">Buy it</button>
-        </div>
-      </div>
-    </article>
-
-    <article class="card reveal" data-tilt>
-      <div class="card__frame">
-        <img src="images/products/benq-c1020-crop.jpg" alt="BenQ DC C1020 digital camera">
-      </div>
-      <div class="card__body">
-        <h3 class="card__name script">BenQ DC C1020</h3>
-        <p class="card__meta">10MP · brushed silver · charm included</p>
-        <p class="card__desc">An underrated favourite — soft-focus edges and warm indoor flash that makes everyone look like a memory already.</p>
-        <div class="card__row card__row--buy card__actions">
-          <button type="button" class="btn btn--details" data-details="benq-c1020">Details</button>
-          <button type="button" class="btn btn--buy" data-buy data-camera="BenQ DC C1020" data-image="images/products/benq-c1020-crop.jpg">Buy it</button>
-        </div>
-      </div>
-    </article>
-
-  </div>
+  <div class="cards" id="productCards"><!-- filled from data.js --></div>
 </section>
 
 <!-- ===== COMING SOON (countdown + mystery cards) ===== -->
 <section class="coming-soon" id="coming-soon">
   <div class="coming-soon__inner">
     <p class="section__eyebrow section__eyebrow--light">something's brewing</p>
-    <h2 class="section__title section__title--light" id="comingSoonHeading">3 new cameras dropping soon 👀</h2>
-    <p class="coming-soon__sub" id="comingSoonSub">We're cleaning, testing and charming up three fresh finds. Check back — or get notified the second they land.</p>
+    <h2 class="section__title section__title--light" id="comingSoonHeading">New cameras dropping soon 👀</h2>
+    <p class="coming-soon__sub" id="comingSoonSub">Fresh finds are on the way. Check back — or get notified the second they land.</p>
 
     <div class="countdown" id="countdown" aria-live="polite">
       <div class="countdown__unit">
@@ -185,23 +137,7 @@
       </div>
     </div>
 
-    <div class="mystery-row">
-      <div class="mystery-card reveal">
-        <div class="mystery-card__glow"></div>
-        <span class="mystery-card__mark">?</span>
-        <span class="mystery-card__ribbon">Coming Soon</span>
-      </div>
-      <div class="mystery-card reveal">
-        <div class="mystery-card__glow"></div>
-        <span class="mystery-card__mark">?</span>
-        <span class="mystery-card__ribbon">Coming Soon</span>
-      </div>
-      <div class="mystery-card reveal">
-        <div class="mystery-card__glow"></div>
-        <span class="mystery-card__mark">?</span>
-        <span class="mystery-card__ribbon">Coming Soon</span>
-      </div>
-    </div>
+    <div class="mystery-row" id="mysteryRow"><!-- filled from data.js --></div>
 
     <button type="button" class="btn btn--primary btn--light coming-soon__notify" id="notifyBtn">
       <i class="bi bi-bell-fill"></i>&nbsp; Notify Me on WhatsApp
@@ -226,33 +162,8 @@
 </section>
 
 <!-- ===== POLAROID GALLERY (below the wall) ===== -->
-<section class="polaroid-gallery">
-  <div class="polaroid-gallery__row">
-    <div class="polaroid-wrap reveal">
-      <figure class="polaroid" style="--rot:-6deg;--ty:10px;"><img src="images/products/samsung-s860-crop2.jpg" alt="Samsung S860 close-up"></figure>
-    </div>
-    <div class="polaroid-wrap reveal">
-      <figure class="polaroid" style="--rot:4deg;--ty:-16px;"><img src="images/products/fujifilm-xp10-crop3.jpg" alt="Fujifilm FinePix XP10 close-up"></figure>
-    </div>
-    <div class="polaroid-wrap reveal">
-      <figure class="polaroid" style="--rot:-3deg;--ty:6px;"><img src="images/products/benq-c1020-crop2.jpg" alt="BenQ DC C1020 close-up"></figure>
-    </div>
-    <div class="polaroid-wrap reveal">
-      <figure class="polaroid" style="--rot:7deg;--ty:-8px;"><img src="images/products/samsung-s860-crop4.jpg" alt="Samsung S860 detail"></figure>
-    </div>
-    <div class="polaroid-wrap reveal">
-      <figure class="polaroid" style="--rot:-8deg;--ty:12px;"><img src="images/products/fujifilm-xp10-crop4.jpg" alt="Fujifilm FinePix XP10 detail"></figure>
-    </div>
-    <div class="polaroid-wrap reveal">
-      <figure class="polaroid" style="--rot:3deg;--ty:-10px;"><img src="images/products/benq-c1020-crop3.jpg" alt="BenQ DC C1020 detail"></figure>
-    </div>
-    <div class="polaroid-wrap reveal">
-      <figure class="polaroid" style="--rot:5deg;--ty:4px;"><img src="images/products/samsung-s860-crop3.jpg" alt="Samsung S860 angle"></figure>
-    </div>
-    <div class="polaroid-wrap reveal">
-      <figure class="polaroid" style="--rot:-4deg;--ty:-6px;"><img src="images/products/fujifilm-xp10-crop2.jpg" alt="Fujifilm FinePix XP10 angle"></figure>
-    </div>
-  </div>
+<section class="polaroid-gallery" id="polaroidGallery">
+  <div class="polaroid-gallery__row" id="polaroidGalleryRow"><!-- filled from data.js --></div>
 </section>
 
 <!-- ===== FEEDBACK (customer screenshots, masonry wall) ===== -->
@@ -309,7 +220,7 @@
       </div>
     </div>
 
-    <a href="#" class="btn btn--primary btn--light">Message to Order</a>
+    <a href="#" class="btn btn--primary btn--light" id="messageOrderBtn">Message to Order</a>
   </div>
 </section>
 
@@ -358,31 +269,13 @@
     </div>
 
     <!-- FULL WIDTH / 12 COL -->
-    <div class="detail-modal__promise">
-        <h4>🛡 Bloom Camz Promise</h4>
-
-        <p>
-            Every camera from Bloomcamzz is real, pre-owned, and tested by us before it goes out.
-            We personally check lens, zoom, flash, screen and battery on each piece.
-        </p>
-
-        <p>
-            What you see in the listing photos is exactly what you'll get, so please check them well.
-        </p>
-
-        <p>
-          <strong>Heads up:</strong>
-          Because these are used items, we can't accept returns just for change of mind.
-          But if there's any fault on arrival, contact us within 48 hours +
-          an unboxing video and we'll replace it or refund you 100%.
-        </p>
-
-        <button type="button"
-                class="detail-promise__whatsapp"
-                id="promiseWhatsapp">
-          <i class="bi bi-whatsapp"></i>
-          Contact us on WhatsApp
-        </button>
+    <div class="detail-modal__promise" id="detailPromise">
+      <h4 id="promiseTitle">🛡 Bloom Camz Promise</h4>
+      <div id="promiseBody"></div>
+      <button type="button" class="detail-promise__whatsapp" id="promiseWhatsapp">
+        <i class="bi bi-whatsapp"></i>
+        <span id="promiseWhatsappText">Contact us on WhatsApp</span>
+      </button>
     </div>
 
   </div>
@@ -503,6 +396,26 @@
   <button type="button" class="feedback-lightbox__arrow feedback-lightbox__arrow--next" id="feedbackNext" aria-label="Next screenshot">›</button>
 </div>
 
+
+<!-- ===== NEW DROP ALERT ===== -->
+<div class="drop-modal" id="dropModal" aria-hidden="true">
+  <div class="drop-modal__backdrop" data-drop-close></div>
+  <div class="drop-modal__panel" role="dialog" aria-modal="true" aria-labelledby="dropModalTitle">
+    <button type="button" class="drop-modal__close" data-drop-close aria-label="Close">×</button>
+    <div class="drop-modal__sparkles" aria-hidden="true">
+      <span>✦</span><span>✨</span><span>✧</span><span>✿</span>
+    </div>
+    <p class="drop-modal__eyebrow script">freshly dropped</p>
+    <h3 class="drop-modal__title" id="dropModalTitle">New cameras are live ✨</h3>
+    <p class="drop-modal__sub" id="dropModalSub">Fresh Bloom Camz finds just landed.</p>
+    <div class="drop-modal__products" id="dropModalProducts"></div>
+    <button type="button" class="btn btn--primary drop-modal__cta" id="dropViewBtn">
+      View the new drop
+    </button>
+  </div>
+</div>
+
+<script src="data.js"></script>
 <script src="script.js"></script>
 </body>
 </html>
