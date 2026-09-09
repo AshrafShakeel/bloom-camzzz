@@ -11,6 +11,65 @@ const WHATSAPP_NUMBER = SETTINGS.whatsappNumber || '923094440016';
 const INSTAGRAM_URL = SETTINGS.instagramUrl || 'https://www.instagram.com/bloomcamzzz/';
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+/* ============================================
+   Global dialog scroll lock
+   - Freezes the page behind any open dialog
+   - Keeps the user's exact scroll position
+   - Allows the dialog itself to scroll
+============================================ */
+let pageScrollLockY = 0;
+let pageScrollLocked = false;
+let pageScrollPaddingRight = '';
+
+function isAnyDialogOpen() {
+  return Boolean(document.querySelector(
+    '.detail-modal.is-open, .buy-modal.is-open, .request-modal.is-open, .feedback-lightbox.is-open, .drop-modal.is-open'
+  ));
+}
+
+function lockPageScroll() {
+  if (pageScrollLocked) return;
+
+  pageScrollLockY = window.scrollY || document.documentElement.scrollTop || 0;
+  pageScrollPaddingRight = document.body.style.paddingRight;
+
+  const scrollbarWidth = Math.max(0, window.innerWidth - document.documentElement.clientWidth);
+  if (scrollbarWidth > 0) {
+    document.body.style.paddingRight = `${scrollbarWidth}px`;
+  }
+
+  document.body.style.top = `-${pageScrollLockY}px`;
+  document.body.classList.add('modal-open');
+  pageScrollLocked = true;
+}
+
+function unlockPageScroll() {
+  requestAnimationFrame(() => {
+    if (!pageScrollLocked || isAnyDialogOpen()) return;
+
+    const restoreY = pageScrollLockY;
+    const html = document.documentElement;
+
+    // Temporarily disable smooth scrolling
+    const oldScrollBehavior = html.style.scrollBehavior;
+    html.style.scrollBehavior = 'auto';
+
+    document.body.classList.remove('modal-open');
+    document.body.style.top = '';
+    document.body.style.paddingRight = pageScrollPaddingRight;
+
+    pageScrollLocked = false;
+
+    // Instantly restore exact previous position
+    window.scrollTo(0, restoreY);
+
+    // Enable normal smooth scrolling again
+    requestAnimationFrame(() => {
+      html.style.scrollBehavior = oldScrollBehavior;
+    });
+  });
+}
+
 function safeDate(value) {
   if (!value) return null;
   const date = new Date(value);
@@ -584,12 +643,14 @@ function openFeedbackLightbox(index) {
   feedbackNext.hidden = !hasMultiple;
   feedbackLightbox.classList.add('is-open');
   feedbackLightbox.setAttribute('aria-hidden', 'false');
+  lockPageScroll();
 }
 
 function closeFeedbackLightbox() {
   if (!feedbackLightbox) return;
   feedbackLightbox.classList.remove('is-open');
   feedbackLightbox.setAttribute('aria-hidden', 'true');
+  unlockPageScroll();
 }
 
 if (feedbackLightbox) {
@@ -680,12 +741,14 @@ function openDetailModal(productId) {
   renderDetailImage();
   detailModal.classList.add('is-open');
   detailModal.setAttribute('aria-hidden', 'false');
+  lockPageScroll();
 }
 
 function closeDetailModal() {
   if (!detailModal) return;
   detailModal.classList.remove('is-open');
   detailModal.setAttribute('aria-hidden', 'true');
+  unlockPageScroll();
 }
 
 if (detailModal) {
@@ -745,12 +808,14 @@ function openBuyModal(cameraName, imageSrc) {
   buyModalImg.alt = cameraName;
   buyModal.classList.add('is-open');
   buyModal.setAttribute('aria-hidden', 'false');
+  lockPageScroll();
 }
 
 function closeBuyModal() {
   if (!buyModal) return;
   buyModal.classList.remove('is-open');
   buyModal.setAttribute('aria-hidden', 'true');
+  unlockPageScroll();
 }
 
 if (buyModal) {
@@ -796,6 +861,7 @@ function openRequestModal() {
   if (!requestModal) return;
   requestModal.classList.add('is-open');
   requestModal.setAttribute('aria-hidden', 'false');
+  lockPageScroll();
   setTimeout(() => reqModelInput?.focus(), 250);
 }
 
@@ -803,6 +869,7 @@ function closeRequestModal() {
   if (!requestModal) return;
   requestModal.classList.remove('is-open');
   requestModal.setAttribute('aria-hidden', 'true');
+  unlockPageScroll();
 }
 
 function shakeField(el) {
@@ -910,14 +977,14 @@ function openDropModal(products) {
   products.forEach(markDropSeen);
   dropModal.classList.add('is-open');
   dropModal.setAttribute('aria-hidden', 'false');
-  document.body.classList.add('modal-lock');
+  lockPageScroll();
 }
 
 function closeDropModal() {
   if (!dropModal) return;
   dropModal.classList.remove('is-open');
   dropModal.setAttribute('aria-hidden', 'true');
-  document.body.classList.remove('modal-lock');
+  unlockPageScroll();
 }
 
 function maybeShowDropAlert() {

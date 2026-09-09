@@ -22,7 +22,41 @@
 }
 
 *,*::before,*::after{ box-sizing: border-box; }
-html{ scroll-behavior: smooth; }
+html{
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: var(--plum) var(--cream);
+  scrollbar-gutter: stable;
+}
+
+/* Bloom Camz themed thin scrollbar — page + modal content */
+*{
+  scrollbar-width: thin;
+  scrollbar-color: var(--plum) var(--cream);
+}
+
+::-webkit-scrollbar{
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track{
+  background: var(--cream);
+}
+
+::-webkit-scrollbar-thumb{
+  background: var(--plum);
+  border-radius: 999px;
+  border: 2px solid var(--cream);
+}
+
+::-webkit-scrollbar-thumb:hover{
+  background: var(--plum-deep);
+}
+
+::-webkit-scrollbar-corner{
+  background: var(--cream);
+}
 body{
   margin:0;
   background: var(--cream);
@@ -1101,7 +1135,33 @@ p{ margin: 0; }
   box-shadow:none !important;
 }
 
-body.modal-lock{ overflow:hidden; }
+/* Freeze the website behind every dialog without losing scroll position */
+body.modal-open{
+  position: fixed;
+  left: 0;
+  right: 0;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* Keep scrolling inside dialogs contained to the dialog itself */
+.detail-modal__panel,
+.buy-modal__panel,
+.request-modal__panel,
+.drop-modal__panel{
+  overscroll-behavior: contain;
+}
+
+/* Small dialogs remain scrollable on short/mobile screens */
+.buy-modal__panel{
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.drop-modal__panel{
+  max-height: 90vh;
+  overflow-y: auto;
+}
 
 /* ============================================
    New Drop alert — first visit after a launch

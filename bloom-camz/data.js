@@ -208,7 +208,7 @@ window.BLOOM_DATA = {
 
       status: 'available',
       isActive: true,
-      launchAt: '2026-09-09T22:52:00+05:00',
+      launchAt: '2026-09-09T23:58:00+05:00',
       announceOnLaunch: true,
       sortOrder: 4
     },
@@ -245,14 +245,14 @@ window.BLOOM_DATA = {
         'SD / SDHC Compatible',
         'Slim & Pocket-Friendly Design',
         'With Box',
-        'Condition: 8.5/0',
+        'Condition: 8.5/10',
         'Minor signs of use and scratches',
         'Fully Tested & Working'
       ],
 
       status: 'available',
       isActive: true,
-      launchAt: '2026-09-09T22:52:00+05:00',
+      launchAt: '2026-09-09T23:58:00+05:00',
       announceOnLaunch: true,
       sortOrder: 5
     },
@@ -299,7 +299,7 @@ window.BLOOM_DATA = {
 
       status: 'available',
       isActive: true,
-      launchAt: '2026-09-09T22:52:00+05:00',
+      launchAt: '2026-09-09T23:58:00+05:00',
       announceOnLaunch: true,
       sortOrder: 6
     }
