@@ -411,7 +411,7 @@ p{ margin: 0; }
   padding: 5px 12px; border-radius: 999px; text-transform: uppercase;
 }
 .card__body{ padding: 26px 26px 28px; transform: translateZ(20px); }
-.card__name{ font-size: 1.7rem; color: var(--plum); }
+.card__name{ font-size: 1.7rem; color: var(--plum); font-family: var(--sans); }
 .card__meta{ font-size: .78rem; color: var(--sage-deep); font-weight:700; letter-spacing:.02em; margin-top: 4px; text-transform: uppercase; }
 .card__desc{ margin-top: 12px; font-size: .92rem; color: #5a5248; }
 .card__row{
@@ -920,7 +920,7 @@ p{ margin: 0; }
   padding: 12px 8px 8px 0;
 }
 .detail-modal__eyebrow{ color: var(--plum); font-size: 1.25rem; }
-.detail-modal__title{ margin-top: 2px; font-size: clamp(1.8rem, 3vw, 2.35rem); color: var(--plum-deep); }
+.detail-modal__title{ margin-top: 2px; font-size: clamp(1.8rem, 3vw, 2.35rem); color: var(--plum-deep); font-family: var(--sans); }
 .detail-modal__meta{
   margin-top: 8px; font-size: .78rem; text-transform: uppercase;
   letter-spacing: .03em; font-weight: 700; color: var(--sage-deep);
@@ -1050,7 +1050,7 @@ p{ margin: 0; }
   box-shadow: 0 8px 16px rgba(0,0,0,.18);
 }
 .buy-modal__eyebrow{ color: var(--plum); font-size: 1.15rem; margin-bottom: 2px; }
-.buy-modal__title{ font-size: 1.4rem; }
+.buy-modal__title{ font-size: 1.4rem; font-family: var(--sans); }
 .buy-modal__options{
   display: flex; gap: 12px; margin-top: 22px;
 }

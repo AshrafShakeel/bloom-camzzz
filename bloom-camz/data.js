@@ -18,7 +18,7 @@
 
 window.BLOOM_DATA = {
   settings: {
-    whatsappNumber: '923094440016',
+    whatsappNumber: '923172117112',
     instagramUrl: 'https://www.instagram.com/bloomcamzzz/',
     heroImage: 'images/FirstView/image.jpg',
     logoImage: 'images/logos/logo.jpg',
@@ -208,7 +208,7 @@ window.BLOOM_DATA = {
 
       status: 'available',
       isActive: true,
-      launchAt: '2026-09-09T23:45:00+05:00',
+      launchAt: '2026-09-10T18:07:00+05:00',
       announceOnLaunch: true,
       sortOrder: 4
     },
@@ -252,7 +252,7 @@ window.BLOOM_DATA = {
 
       status: 'available',
       isActive: true,
-      launchAt: '2026-09-09T23:45:00+05:00',
+      launchAt: '2026-09-10T18:07:00+05:00',
       announceOnLaunch: true,
       sortOrder: 5
     },
@@ -299,7 +299,7 @@ window.BLOOM_DATA = {
 
       status: 'available',
       isActive: true,
-      launchAt: '2026-09-09T23:45:00+05:00',
+      launchAt: '2026-09-10T18:07:00+05:00',
       announceOnLaunch: true,
       sortOrder: 6
     }

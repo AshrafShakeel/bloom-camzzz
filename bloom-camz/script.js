@@ -44,19 +44,29 @@ function lockPageScroll() {
 }
 
 function unlockPageScroll() {
-  // Defer one frame so transitions such as Details -> Buy do not
-  // briefly unlock and jump the background page.
   requestAnimationFrame(() => {
     if (!pageScrollLocked || isAnyDialogOpen()) return;
 
     const restoreY = pageScrollLockY;
+    const html = document.documentElement;
+
+    // Temporarily disable smooth scrolling
+    const oldScrollBehavior = html.style.scrollBehavior;
+    html.style.scrollBehavior = 'auto';
 
     document.body.classList.remove('modal-open');
     document.body.style.top = '';
     document.body.style.paddingRight = pageScrollPaddingRight;
 
     pageScrollLocked = false;
-    window.scrollTo({ top: restoreY, left: 0, behavior: 'auto' });
+
+    // Instantly restore exact previous position
+    window.scrollTo(0, restoreY);
+
+    // Enable normal smooth scrolling again
+    requestAnimationFrame(() => {
+      html.style.scrollBehavior = oldScrollBehavior;
+    });
   });
 }
 
@@ -257,7 +267,7 @@ function createProductCard(product) {
   body.className = 'card__body';
 
   const name = document.createElement('h3');
-  name.className = 'card__name script';
+  name.className = 'card__name';
   name.textContent = product.name;
 
   const meta = document.createElement('p');
