@@ -208,7 +208,7 @@ window.BLOOM_DATA = {
 
       status: 'available',
       isActive: true,
-      launchAt: '2026-09-09T23:58:00+05:00',
+      launchAt: '2026-09-09T23:45:00+05:00',
       announceOnLaunch: true,
       sortOrder: 4
     },
@@ -252,7 +252,7 @@ window.BLOOM_DATA = {
 
       status: 'available',
       isActive: true,
-      launchAt: '2026-09-09T23:58:00+05:00',
+      launchAt: '2026-09-09T23:45:00+05:00',
       announceOnLaunch: true,
       sortOrder: 5
     },
@@ -299,7 +299,7 @@ window.BLOOM_DATA = {
 
       status: 'available',
       isActive: true,
-      launchAt: '2026-09-09T23:58:00+05:00',
+      launchAt: '2026-09-09T23:45:00+05:00',
       announceOnLaunch: true,
       sortOrder: 6
     }
