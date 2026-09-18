@@ -1,0 +1,14 @@
+Bloom Camz UI Update
+====================
+
+1. Comparison section is collapsed by default.
+   - Click "Open camera comparison" to expand it.
+   - The panel slides down with a smooth animation.
+   - Click again to collapse it.
+
+2. Header navigation now has an animated active indicator.
+   - As the visitor scrolls, the current menu item becomes active.
+   - On desktop, the plum underline slides from one menu item to the next.
+   - On mobile, the active menu item gets a themed left accent/background.
+
+No product/data format changes were required.

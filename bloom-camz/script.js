@@ -370,6 +370,364 @@ function renderPolaroids() {
 }
 
 /* ============================================
+   Camera comparison — dynamic + data-driven
+============================================ */
+const compareSection = document.getElementById('compare');
+const compareShell = document.getElementById('compareShell');
+const compareToggle = document.getElementById('compareToggle');
+const compareToggleText = document.getElementById('compareToggleText');
+const compareResults = document.getElementById('compareResults');
+const compareLeftSelect = document.getElementById('compareLeftSelect');
+const compareRightSelect = document.getElementById('compareRightSelect');
+const compareLeftImg = document.getElementById('compareLeftImg');
+const compareRightImg = document.getElementById('compareRightImg');
+const compareLeftName = document.getElementById('compareLeftName');
+const compareRightName = document.getElementById('compareRightName');
+const compareLeftMeta = document.getElementById('compareLeftMeta');
+const compareRightMeta = document.getElementById('compareRightMeta');
+const compareLeftStatus = document.getElementById('compareLeftStatus');
+const compareRightStatus = document.getElementById('compareRightStatus');
+const compareSwap = document.getElementById('compareSwap');
+const compareCfg = SETTINGS.comparison || {};
+
+const compareMetrics = [
+  { key: 'megapixels', label: 'Resolution', icon: 'bi-grid-3x3-gap', format: (v) => `${v} MP`, score: (v) => numberOrNull(v) },
+  { key: 'opticalZoom', label: 'Optical Zoom', icon: 'bi-search', format: (v) => `${v}×`, score: (v) => numberOrNull(v) },
+  { key: 'screenSize', label: 'LCD Screen', icon: 'bi-display', format: (v) => `${v}″`, score: (v) => numberOrNull(v) },
+  { key: 'stabilization', label: 'Stabilization', icon: 'bi-hand-index-thumb', format: (v) => objectValue(v), score: (v) => objectScore(v) },
+  { key: 'video', label: 'Video', icon: 'bi-camera-video', format: (v) => objectValue(v), score: (v) => objectScore(v) },
+  { key: 'condition', label: 'Condition', icon: 'bi-stars', format: (v) => v == null ? 'Not listed' : `${v}/10`, score: (v) => numberOrNull(v) },
+  { key: 'boxIncluded', label: 'Original Box', icon: 'bi-box-seam', format: (v) => v === true ? 'Included' : v === false ? 'Not included' : 'Not listed', score: (v) => v === true ? 1 : v === false ? 0 : null },
+  { key: 'accessories', label: 'Accessories', icon: 'bi-bag-check', format: (v) => Array.isArray(v) && v.length ? v.join(' · ') : 'Not listed', score: (v) => Array.isArray(v) && v.length ? v.length : null },
+  { key: 'storage', label: 'Storage', icon: 'bi-sd-card', format: (v) => v || 'Not listed', score: () => null },
+  { key: 'battery', label: 'Battery', icon: 'bi-battery-charging', format: (v) => v || 'Not listed', score: () => null }
+];
+
+function numberOrNull(value) {
+  const num = Number(value);
+  return value == null || value === '' || Number.isNaN(num) ? null : num;
+}
+
+function objectValue(value) {
+  if (value && typeof value === 'object') return value.value || 'Not listed';
+  return value || 'Not listed';
+}
+
+function objectScore(value) {
+  if (!value || typeof value !== 'object') return null;
+  return numberOrNull(value.score);
+}
+
+function getComparableProducts() {
+  const includeSold = compareCfg.includeSold !== false;
+  return getLiveProducts().filter((product) => includeSold || (product.status || '').toLowerCase() !== 'sold');
+}
+
+function setComparePicker(side, product) {
+  const isLeft = side === 'left';
+  const img = isLeft ? compareLeftImg : compareRightImg;
+  const name = isLeft ? compareLeftName : compareRightName;
+  const meta = isLeft ? compareLeftMeta : compareRightMeta;
+  const status = isLeft ? compareLeftStatus : compareRightStatus;
+
+  if (!product) {
+    img.removeAttribute('src');
+    img.alt = '';
+    name.textContent = 'Choose a camera';
+    meta.textContent = '';
+    status.textContent = '';
+    status.className = 'compare-picker__status';
+    return;
+  }
+
+  img.src = product.cardImage || product.images?.[0] || '';
+  img.alt = product.name;
+  name.textContent = product.name;
+  meta.textContent = product.meta || '';
+
+  const sold = (product.status || '').toLowerCase() === 'sold';
+  status.textContent = sold ? 'Sold' : 'Available';
+  status.className = `compare-picker__status ${sold ? 'is-sold' : 'is-available'}`;
+}
+
+function buildCompareOptions(select, products, selectedId, otherId) {
+  if (!select) return;
+  select.innerHTML = '';
+
+  products.forEach((product) => {
+    const option = document.createElement('option');
+    option.value = product.id;
+    const sold = (product.status || '').toLowerCase() === 'sold';
+    option.textContent = `${product.name}${sold ? ' — Sold' : ''}`;
+    option.disabled = product.id === otherId;
+    select.appendChild(option);
+  });
+
+  if (products.some((p) => p.id === selectedId)) select.value = selectedId;
+}
+
+function metricWinner(metric, leftCompare, rightCompare) {
+  const leftScore = metric.score(leftCompare?.[metric.key]);
+  const rightScore = metric.score(rightCompare?.[metric.key]);
+  if (leftScore == null || rightScore == null || leftScore === rightScore) return 'tie';
+  return leftScore > rightScore ? 'left' : 'right';
+}
+
+function createCompareValue(value, winner, side) {
+  const cell = document.createElement('div');
+  cell.className = `compare-value compare-value--${side}`;
+  if (winner === side) cell.classList.add('is-better');
+  if (winner === 'tie') cell.classList.add('is-tie');
+
+  const text = document.createElement('span');
+  text.className = 'compare-value__text';
+  text.textContent = value;
+  cell.appendChild(text);
+
+  if (winner === side) {
+    const badge = document.createElement('span');
+    badge.className = 'compare-value__badge';
+    badge.innerHTML = '<i class="bi bi-sparkles"></i> Edge';
+    cell.appendChild(badge);
+  }
+
+  return cell;
+}
+
+function createBestForChips(product) {
+  const wrap = document.createElement('div');
+  wrap.className = 'compare-bestfor';
+  const bestFor = Array.isArray(product.compare?.bestFor) ? product.compare.bestFor : [];
+
+  bestFor.slice(0, 3).forEach((text) => {
+    const chip = document.createElement('span');
+    chip.textContent = text;
+    wrap.appendChild(chip);
+  });
+
+  if (!bestFor.length) {
+    const chip = document.createElement('span');
+    chip.textContent = 'See full details';
+    wrap.appendChild(chip);
+  }
+
+  return wrap;
+}
+
+function createCompareAction(product, side) {
+  const box = document.createElement('div');
+  box.className = `compare-action compare-action--${side}`;
+
+  const title = document.createElement('div');
+  title.className = 'compare-action__title';
+  title.innerHTML = `<span>${side === 'left' ? 'A' : 'B'}</span><strong>${product.name}</strong>`;
+
+  const actions = document.createElement('div');
+  actions.className = 'compare-action__buttons';
+
+  const detailBtn = document.createElement('button');
+  detailBtn.type = 'button';
+  detailBtn.className = 'btn btn--details compare-action__detail';
+  detailBtn.innerHTML = '<i class="bi bi-eye"></i> Details';
+  detailBtn.addEventListener('click', () => openDetailModal(product.id));
+
+  const buyBtn = document.createElement('button');
+  buyBtn.type = 'button';
+  buyBtn.className = 'btn btn--buy compare-action__buy';
+  const sold = (product.status || '').toLowerCase() === 'sold';
+  buyBtn.disabled = sold;
+  buyBtn.classList.toggle('is-disabled', sold);
+  buyBtn.innerHTML = sold ? '<i class="bi bi-x-circle"></i> Sold Out' : '<i class="bi bi-bag-heart"></i> Buy it';
+  buyBtn.addEventListener('click', () => {
+    if (sold) return;
+    triggerFlash();
+    openBuyModal(product.name, product.cardImage || product.images?.[0] || '');
+  });
+
+  actions.append(detailBtn, buyBtn);
+  box.append(title, actions);
+  return box;
+}
+
+function renderComparison() {
+  if (!compareSection || !compareResults || !compareLeftSelect || !compareRightSelect) return;
+
+  const products = getComparableProducts();
+  const compareNavLink = document.querySelector('.nav__links a[href="#compare"]');
+
+  if (products.length < 2) {
+    compareSection.hidden = true;
+    if (compareNavLink) compareNavLink.hidden = true;
+    requestAnimationFrame(() => typeof updateActiveNav === 'function' && updateActiveNav());
+    return;
+  }
+
+  compareSection.hidden = false;
+  if (compareNavLink) compareNavLink.hidden = false;
+  requestAnimationFrame(() => typeof updateActiveNav === 'function' && updateActiveNav());
+
+  let leftId = compareLeftSelect.value;
+  let rightId = compareRightSelect.value;
+
+  if (!products.some((p) => p.id === leftId)) {
+    leftId = products.some((p) => p.id === compareCfg.defaultLeft) ? compareCfg.defaultLeft : products[0].id;
+  }
+  if (!products.some((p) => p.id === rightId) || rightId === leftId) {
+    rightId = products.some((p) => p.id === compareCfg.defaultRight) && compareCfg.defaultRight !== leftId
+      ? compareCfg.defaultRight
+      : products.find((p) => p.id !== leftId)?.id;
+  }
+
+  buildCompareOptions(compareLeftSelect, products, leftId, rightId);
+  buildCompareOptions(compareRightSelect, products, rightId, leftId);
+
+  const left = getProductById(compareLeftSelect.value);
+  const right = getProductById(compareRightSelect.value);
+  setComparePicker('left', left);
+  setComparePicker('right', right);
+
+  if (!left || !right || left.id === right.id) {
+    compareResults.innerHTML = '<div class="compare-empty"><i class="bi bi-camera2"></i><p>Choose two different cameras to start comparing.</p></div>';
+    return;
+  }
+
+  const leftCompare = left.compare || {};
+  const rightCompare = right.compare || {};
+  const leftWins = [];
+  const rightWins = [];
+
+  const fragment = document.createDocumentFragment();
+
+  const top = document.createElement('div');
+  top.className = 'compare-results__top';
+
+  const leftBest = document.createElement('article');
+  leftBest.className = 'compare-best compare-best--left';
+  leftBest.innerHTML = `<p>Best for</p><h4>${left.name}</h4>`;
+  leftBest.appendChild(createBestForChips(left));
+
+  const center = document.createElement('div');
+  center.className = 'compare-results__center';
+  center.innerHTML = '<i class="bi bi-lightning-charge-fill"></i><span>Spec check</span>';
+
+  const rightBest = document.createElement('article');
+  rightBest.className = 'compare-best compare-best--right';
+  rightBest.innerHTML = `<p>Best for</p><h4>${right.name}</h4>`;
+  rightBest.appendChild(createBestForChips(right));
+
+  top.append(leftBest, center, rightBest);
+  fragment.appendChild(top);
+
+  const rows = document.createElement('div');
+  rows.className = 'compare-rows';
+
+  compareMetrics.forEach((metric, index) => {
+    const winner = metricWinner(metric, leftCompare, rightCompare);
+    if (winner === 'left') leftWins.push(metric.label);
+    if (winner === 'right') rightWins.push(metric.label);
+
+    const row = document.createElement('div');
+    row.className = 'compare-row';
+    row.style.setProperty('--compare-delay', `${index * 55}ms`);
+
+    const leftValue = metric.format(leftCompare?.[metric.key]);
+    const rightValue = metric.format(rightCompare?.[metric.key]);
+
+    const label = document.createElement('div');
+    label.className = 'compare-row__metric';
+    label.innerHTML = `<i class="bi ${metric.icon}"></i><span>${metric.label}</span>`;
+
+    row.append(
+      createCompareValue(leftValue, winner, 'left'),
+      label,
+      createCompareValue(rightValue, winner, 'right')
+    );
+    rows.appendChild(row);
+  });
+
+  fragment.appendChild(rows);
+
+  const quick = document.createElement('div');
+  quick.className = 'compare-quick';
+  const leftLeadText = leftWins.length ? leftWins.slice(0, 3).join(', ') : 'no clear numeric lead';
+  const rightLeadText = rightWins.length ? rightWins.slice(0, 3).join(', ') : 'no clear numeric lead';
+  quick.innerHTML = `
+    <div class="compare-quick__icon"><i class="bi bi-magic"></i></div>
+    <div class="compare-quick__copy">
+      <p class="compare-quick__eyebrow">quick take</p>
+      <h4>Choose by what matters most to you.</h4>
+      <p><strong>${left.name}</strong> has an edge in ${leftLeadText}. <strong>${right.name}</strong> has an edge in ${rightLeadText}. For battery, storage, accessories or condition, use the listed rows rather than assuming missing info.</p>
+    </div>
+    <div class="compare-quick__score">
+      <span>${leftWins.length}</span><small>spec edges</small>
+      <b>:</b>
+      <span>${rightWins.length}</span><small>spec edges</small>
+    </div>`;
+  fragment.appendChild(quick);
+
+  const actions = document.createElement('div');
+  actions.className = 'compare-actions';
+  actions.append(createCompareAction(left, 'left'), createCompareAction(right, 'right'));
+  fragment.appendChild(actions);
+
+  compareResults.innerHTML = '';
+  compareResults.appendChild(fragment);
+  compareResults.classList.remove('is-refreshing');
+  void compareResults.offsetWidth;
+  compareResults.classList.add('is-refreshing');
+}
+
+function refreshComparisonOptions() {
+  if (!compareSection) return;
+  renderComparison();
+}
+
+function setCompareExpanded(expanded) {
+  if (!compareSection || !compareToggle) return;
+
+  compareSection.classList.toggle('is-expanded', expanded);
+  compareToggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+
+  if (compareToggleText) {
+    compareToggleText.textContent = expanded
+      ? 'Close camera comparison'
+      : 'Open camera comparison';
+  }
+}
+
+compareToggle?.addEventListener('click', () => {
+  const expanded = compareToggle.getAttribute('aria-expanded') === 'true';
+  setCompareExpanded(!expanded);
+});
+
+compareLeftSelect?.addEventListener('change', () => {
+  if (compareLeftSelect.value === compareRightSelect.value) {
+    const alternative = getComparableProducts().find((p) => p.id !== compareLeftSelect.value);
+    if (alternative) compareRightSelect.value = alternative.id;
+  }
+  renderComparison();
+});
+
+compareRightSelect?.addEventListener('change', () => {
+  if (compareRightSelect.value === compareLeftSelect.value) {
+    const alternative = getComparableProducts().find((p) => p.id !== compareRightSelect.value);
+    if (alternative) compareLeftSelect.value = alternative.id;
+  }
+  renderComparison();
+});
+
+compareSwap?.addEventListener('click', () => {
+  const left = compareLeftSelect.value;
+  const right = compareRightSelect.value;
+  compareSwap.classList.remove('is-spinning');
+  void compareSwap.offsetWidth;
+  compareSwap.classList.add('is-spinning');
+  compareLeftSelect.value = right;
+  compareRightSelect.value = left;
+  renderComparison();
+});
+
+/* ============================================
    Coming Soon — fully driven by product launchAt
 ============================================ */
 const comingSoonSection = document.getElementById('coming-soon');
@@ -395,11 +753,13 @@ function renderComingSoon() {
     comingSoonSection.hidden = true;
     if (comingSoonNavLink) comingSoonNavLink.hidden = true;
     activeCountdownTarget = null;
+    requestAnimationFrame(() => typeof updateActiveNav === 'function' && updateActiveNav());
     return;
   }
 
   comingSoonSection.hidden = false;
   if (comingSoonNavLink) comingSoonNavLink.hidden = false;
+  requestAnimationFrame(() => typeof updateActiveNav === 'function' && updateActiveNav());
   const count = upcoming.length;
   const noun = count === 1 ? 'camera' : 'cameras';
   comingSoonHeading.textContent = `${count} new ${noun} dropping soon 👀`;
@@ -1095,22 +1455,94 @@ if (burger && navLinks) {
   });
 }
 
-/* ---- Nav background ---- */
+/* ---- Active navigation underline: slides with the current section ---- */
 const nav = document.getElementById('nav');
-window.addEventListener('scroll', () => {
-  if (!nav) return;
-  nav.style.boxShadow = window.scrollY > 40 ? '0 4px 20px rgba(43,38,34,.08)' : 'none';
-}, { passive: true });
+const navActiveIndicator = document.getElementById('navActiveIndicator');
+const navSectionLinks = navLinks
+  ? Array.from(navLinks.querySelectorAll('a[href^="#"]'))
+  : [];
+
+function getUsableNavLinks() {
+  return navSectionLinks.filter((link) => {
+    if (link.hidden) return false;
+    const id = link.getAttribute('href')?.slice(1);
+    const section = id ? document.getElementById(id) : null;
+    return section && !section.hidden;
+  });
+}
+
+function moveNavIndicator(activeLink) {
+  if (!navActiveIndicator || !navLinks || window.innerWidth <= 800 || !activeLink) {
+    navActiveIndicator?.classList.remove('is-visible');
+    return;
+  }
+
+  const navRect = navLinks.getBoundingClientRect();
+  const linkRect = activeLink.getBoundingClientRect();
+  const x = linkRect.left - navRect.left;
+
+  navActiveIndicator.style.width = `${linkRect.width}px`;
+  navActiveIndicator.style.transform = `translateX(${x}px)`;
+  navActiveIndicator.classList.add('is-visible');
+}
+
+function updateActiveNav() {
+  const usableLinks = getUsableNavLinks();
+  const markerY = window.scrollY + (nav?.offsetHeight || 70) + 34;
+  let activeLink = null;
+
+  usableLinks.forEach((link) => {
+    const id = link.getAttribute('href')?.slice(1);
+    const section = id ? document.getElementById(id) : null;
+    if (section && section.offsetTop <= markerY) {
+      activeLink = link;
+    }
+  });
+
+  // Keep the final section active when the user reaches the page bottom.
+  if (
+    usableLinks.length &&
+    window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4
+  ) {
+    activeLink = usableLinks[usableLinks.length - 1];
+  }
+
+  navSectionLinks.forEach((link) => {
+    const isActive = link === activeLink;
+    link.classList.toggle('is-active', isActive);
+    if (isActive) link.setAttribute('aria-current', 'page');
+    else link.removeAttribute('aria-current');
+  });
+
+  moveNavIndicator(activeLink);
+}
+
+function updateNavChrome() {
+  if (nav) {
+    nav.style.boxShadow = window.scrollY > 40
+      ? '0 4px 20px rgba(43,38,34,.08)'
+      : 'none';
+  }
+  updateActiveNav();
+}
+
+window.addEventListener('scroll', updateNavChrome, { passive: true });
+window.addEventListener('resize', updateActiveNav);
 
 /* ---- Render all data-driven areas ---- */
 function renderProductAreas() {
   renderProducts();
   renderPolaroids();
   renderComingSoon();
+  refreshComparisonOptions();
 }
 
 renderProductAreas();
 observeRevealElements(document);
 initTiltCards(document);
+updateActiveNav();
 
-window.addEventListener('load', maybeShowDropAlert);
+window.addEventListener('load', () => {
+  updateActiveNav();
+  maybeShowDropAlert();
+});

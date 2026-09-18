@@ -33,10 +33,12 @@
     </a>
     <nav class="nav__links">
       <a href="#collection">Collection</a>
+      <a href="#compare">Compare</a>
       <a href="#coming-soon">Coming Soon</a>
       <a href="#feedback">Feedback</a>
       <a href="#request">Request</a>
       <a href="#order">How to Order</a>
+      <span class="nav__active-indicator" id="navActiveIndicator" aria-hidden="true"></span>
     </nav>
     <span class="nav__flag">Karachi&nbsp;🇵🇰</span>
     <button class="nav__burger" id="burger" aria-label="Open menu">
@@ -109,6 +111,99 @@
   </div>
 
   <div class="cards" id="productCards"><!-- filled from data.js --></div>
+</section>
+
+<!-- ===== CAMERA COMPARISON ===== -->
+<section class="compare" id="compare">
+  <div class="compare__ambient compare__ambient--one" aria-hidden="true"></div>
+  <div class="compare__ambient compare__ambient--two" aria-hidden="true"></div>
+
+  <div class="section__head reveal compare__head">
+    <p class="section__eyebrow">can’t decide?</p>
+    <h2 class="section__title">Put your favourites head-to-head</h2>
+    <p class="section__sub">Pick any two live Bloom Camz cameras and compare the specs that actually matter before you choose your one.</p>
+
+    <button
+      type="button"
+      class="compare__toggle"
+      id="compareToggle"
+      aria-expanded="false"
+      aria-controls="compareBody">
+      <span class="compare__toggle-icon"><i class="bi bi-bar-chart"></i></span>
+      <span class="compare__toggle-copy">
+        <strong id="compareToggleText">Open camera comparison</strong>
+        <small>Tap to compare two favourites</small>
+      </span>
+      <i class="bi bi-chevron-down compare__toggle-chevron" aria-hidden="true"></i>
+    </button>
+  </div>
+
+  <div class="compare__collapse" id="compareBody">
+    <div class="compare__collapse-inner">
+      <div class="compare__shell" id="compareShell">
+    <div class="compare__pickers">
+      <article class="compare-picker compare-picker--left" id="compareLeftPicker">
+        <span class="compare-picker__corner">CAMERA A</span>
+        <div class="compare-picker__image-wrap">
+          <span class="compare-picker__halo" aria-hidden="true"></span>
+          <img id="compareLeftImg" src="" alt="">
+          <span class="compare-picker__status" id="compareLeftStatus"></span>
+        </div>
+        <div class="compare-picker__copy">
+          <p class="compare-picker__micro">your first pick</p>
+          <h3 id="compareLeftName">Choose a camera</h3>
+          <p id="compareLeftMeta"></p>
+        </div>
+        <label class="compare-select" for="compareLeftSelect">
+          <i class="bi bi-camera"></i>
+          <select id="compareLeftSelect" aria-label="Select first camera"></select>
+          <i class="bi bi-chevron-down compare-select__chevron"></i>
+        </label>
+      </article>
+
+      <div class="compare-vs" aria-hidden="true">
+        <span class="compare-vs__line"></span>
+        <div class="compare-vs__badge">VS</div>
+        <button type="button" class="compare-vs__swap" id="compareSwap" aria-label="Swap selected cameras" title="Swap cameras">
+          <i class="bi bi-arrow-left-right"></i>
+        </button>
+        <span class="compare-vs__line"></span>
+      </div>
+
+      <article class="compare-picker compare-picker--right" id="compareRightPicker">
+        <span class="compare-picker__corner">CAMERA B</span>
+        <div class="compare-picker__image-wrap">
+          <span class="compare-picker__halo" aria-hidden="true"></span>
+          <img id="compareRightImg" src="" alt="">
+          <span class="compare-picker__status" id="compareRightStatus"></span>
+        </div>
+        <div class="compare-picker__copy">
+          <p class="compare-picker__micro">your second pick</p>
+          <h3 id="compareRightName">Choose a camera</h3>
+          <p id="compareRightMeta"></p>
+        </div>
+        <label class="compare-select" for="compareRightSelect">
+          <i class="bi bi-camera"></i>
+          <select id="compareRightSelect" aria-label="Select second camera"></select>
+          <i class="bi bi-chevron-down compare-select__chevron"></i>
+        </label>
+      </article>
+    </div>
+
+    <div class="compare__helper">
+      <span><i class="bi bi-stars"></i> Live comparison</span>
+      <p>Highlights are based only on the comparable specs listed for each camera.</p>
+    </div>
+
+    <div class="compare-results" id="compareResults" aria-live="polite">
+      <div class="compare-empty">
+        <i class="bi bi-camera2"></i>
+        <p>Choose two different cameras to start comparing.</p>
+      </div>
+    </div>
+      </div>
+    </div>
+  </div>
 </section>
 
 <!-- ===== COMING SOON (countdown + mystery cards) ===== -->

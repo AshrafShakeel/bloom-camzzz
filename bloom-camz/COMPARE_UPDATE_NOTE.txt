@@ -1,0 +1,26 @@
+Bloom Camz — Comparison Update
+
+New section: Compare (#compare)
+
+Future product updates:
+- Keep using data.js.
+- Add a compare object inside each product.
+- Use null for unknown values; do not guess.
+- Numeric fields (MP, zoom, screen, condition) power the "Edge" highlights.
+- stabilization/video may use { value: 'display text', score: number|null }.
+- bestFor is shown as customer-friendly chips.
+
+Example:
+compare: {
+  megapixels: 12,
+  opticalZoom: 5,
+  screenSize: 2.7,
+  stabilization: { value: 'Optical IS', score: 2 },
+  video: { value: '1280×720', score: 921600 },
+  storage: 'SD / SDHC',
+  battery: 'Rechargeable Li-ion',
+  condition: 9,
+  boxIncluded: true,
+  accessories: ['Battery', 'Charger', 'SD Card'],
+  bestFor: ['Travel', 'Flash photos', 'Everyday carry']
+}

@@ -14,6 +14,8 @@
 // 6) announceOnLaunch: true = first visit after launch shows the New Drop popup.
 // 7) isActive: false = completely hidden (useful while preparing a draft).
 // 8) status can be: "available" or "sold".
+// 9) "compare" powers the Compare section. Keep unknown values as null
+//    instead of guessing. Numeric fields are used only for factual highlights.
 // ============================================================
 
 window.BLOOM_DATA = {
@@ -27,6 +29,13 @@ window.BLOOM_DATA = {
     // 168 = 7 days. Change this if you want the popup window longer/shorter.
     newDropAlertHours: 168,
     polaroidMaxImages: 8,
+
+    // Comparison section defaults. Leave IDs blank to auto-pick live cameras.
+    comparison: {
+      includeSold: true,
+      defaultLeft: 'casio-exilim-ex-z1',
+      defaultRight: 'samsung-es70'
+    },
 
     wall: {
       folder: 'images/TheWall',
@@ -89,6 +98,20 @@ window.BLOOM_DATA = {
         'ISO 80–1000',
         'Multiple Scene Modes'
       ],
+      compare: {
+        megapixels: 8.1,
+        opticalZoom: 3,
+        screenSize: 2.4,
+        stabilization: { value: 'Digital Image Stabilization (DIS)', score: 1 },
+        video: null,
+        storage: null,
+        battery: null,
+        condition: null,
+        boxIncluded: null,
+        accessories: null,
+        bestFor: ['Compact carry', 'Flash photos', 'Classic Y2K look']
+      },
+
       status: 'sold',
       isActive: true,
       launchAt: null,
@@ -124,6 +147,20 @@ window.BLOOM_DATA = {
         'Battery: Rechargeable Li-ion',
         'Condition: 8/10 — Pre-loved with normal signs of use'
       ],
+      compare: {
+        megapixels: 12,
+        opticalZoom: 5,
+        screenSize: 2.7,
+        stabilization: { value: 'Digital Image Stabilization', score: 1 },
+        video: { value: 'HD 720p @ 30fps', score: 921600 },
+        storage: 'SD / SDHC',
+        battery: 'Rechargeable Li-ion',
+        condition: 8,
+        boxIncluded: null,
+        accessories: null,
+        bestFor: ['Travel', 'Everyday snaps', 'Outdoor use']
+      },
+
       status: 'available',
       isActive: true,
       launchAt: null,
@@ -160,6 +197,20 @@ window.BLOOM_DATA = {
         'Battery: 2× AA batteries',
         'Condition: 9/10 — Pre-loved with normal signs of use'
       ],
+      compare: {
+        megapixels: 10.1,
+        opticalZoom: 3,
+        screenSize: 2.5,
+        stabilization: { value: 'Digital Image Stabilization', score: 1 },
+        video: { value: 'Video recording with sound', score: null },
+        storage: 'SD / SDHC',
+        battery: '2× AA batteries',
+        condition: 9,
+        boxIncluded: null,
+        accessories: null,
+        bestFor: ['Indoor flash', 'Parties', 'Warm nostalgic look']
+      },
+
       status: 'available',
       isActive: true,
       launchAt: null,
@@ -206,6 +257,20 @@ window.BLOOM_DATA = {
         'Fully Tested & Working'
       ],
 
+      compare: {
+        megapixels: 10.1,
+        opticalZoom: 3,
+        screenSize: 2.7,
+        stabilization: { value: 'Digital Anti-Shake', score: 1 },
+        video: { value: '848×480', score: 407040 },
+        storage: 'SD / SDHC',
+        battery: 'Battery included',
+        condition: 9,
+        boxIncluded: true,
+        accessories: ['Battery', 'Charger', 'SD Card'],
+        bestFor: ['Pocket carry', 'Flash photography', 'Cute Y2K photos']
+      },
+
       status: 'available',
       isActive: true,
       launchAt: '2026-09-10T18:07:00+05:00',
@@ -249,6 +314,20 @@ window.BLOOM_DATA = {
         'Minor signs of use and scratches',
         'Fully Tested & Working'
       ],
+
+      compare: {
+        megapixels: 14.2,
+        opticalZoom: 5,
+        screenSize: 2.7,
+        stabilization: { value: 'Digital Image Stabilization', score: 1 },
+        video: { value: '640×480', score: 307200 },
+        storage: 'SD / SDHC',
+        battery: null,
+        condition: 8.5,
+        boxIncluded: true,
+        accessories: null,
+        bestFor: ['Group shots', 'Wide-angle photos', 'Everyday photography']
+      },
 
       status: 'available',
       isActive: true,
@@ -296,6 +375,20 @@ window.BLOOM_DATA = {
         'Includes: SD Card',
         'Fully Tested & Working'
       ],
+
+      compare: {
+        megapixels: 10,
+        opticalZoom: 3,
+        screenSize: 2.5,
+        stabilization: { value: 'Optical Image Stabilizer (IS)', score: 2 },
+        video: { value: '640×480', score: 307200 },
+        storage: 'SD / SDHC',
+        battery: 'Battery included',
+        condition: 9,
+        boxIncluded: true,
+        accessories: ['Battery', 'Charger', 'SD Card'],
+        bestFor: ['Flash photos', 'Steadier handheld shots', 'Classic CCD look']
+      },
 
       status: 'available',
       isActive: true,
